@@ -1,6 +1,7 @@
 # GitLab CI Pipeline Configuration
 stages:
   - build
+  - test
 
 build-aarch64:
   stage: build
