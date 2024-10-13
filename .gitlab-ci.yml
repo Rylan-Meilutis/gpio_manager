@@ -4,7 +4,7 @@ stages:
 
 build-aarch64:
   stage: build
-  image: rust-docker-builder  # Docker image with maturin preinstalled
+  image: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder  # Docker image with maturin preinstalled
   id_tokens:
     PYPI_ID_TOKEN:
       # Use "testpypi" if uploading to TestPyPI
