@@ -8,7 +8,7 @@ build-aarch64:
   image:
     name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder  # Docker image with maturin preinstalled
     docker:
-      platform: linux/arm64
+      platform: linux/arm64/v8
   id_tokens:
     PYPI_ID_TOKEN:
       # Use "testpypi" if uploading to TestPyPI
