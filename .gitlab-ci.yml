@@ -23,8 +23,7 @@ build-aarch64:
     - rustup target add aarch64-unknown-linux-gnu
     - python3 -m venv venv
     - source venv/bin/activate
-    - pip3 install uv && uv pip install twine
-    - uv pip3 install -U twine id
+    - pip3 install uv && uv pip install twine id
 
   script:
     # Build the Python package for aarch64
