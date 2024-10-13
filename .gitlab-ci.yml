@@ -26,7 +26,7 @@ build-aarch64:
     - python3 -m venv venv
     - source venv/bin/activate
     #- pip3 install uv && uv pip install twine id maturin
-    - pip3 install pip install twine id maturin
+    - pip3 install twine id maturin
     - sleep 500000
     # Build the Python package for aarch64
     - maturin build --release --target aarch64-unknown-linux-gnu
