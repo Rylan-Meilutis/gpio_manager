@@ -6,7 +6,7 @@ stages:
 build-aarch64:
   stage: build
   image:
-    name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder  # Docker image with maturin preinstalled
+    name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:arm64  # Docker image with maturin preinstalled
     docker:
       platform: linux/arm64/v8
   id_tokens:
