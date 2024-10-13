@@ -26,4 +26,5 @@ build-aarch64:
   script:
     # Build the Python package for aarch64
     - maturin build --release --target aarch64-unknown-linux-gnu
-    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi target/aarch64-linux-gnu-gcc/wheels/*
+    - twine upload -u __token__ -p "${api_token}" target/aarch64-linux-gnu-gcc/wheels/*
