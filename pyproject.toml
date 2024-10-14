@@ -14,3 +14,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python"
 ]
+
+[build-system]
+requires = ["maturin>=0.12"]
+build-backend = "maturin"
