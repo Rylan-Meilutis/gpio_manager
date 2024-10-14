@@ -1,10 +1,19 @@
-# Python GPIO Library
+## Description
 
-## Installation
+- These are rust binding around
+  the [RPPAL - Raspberry Pi Peripheral Access Library](https://github.com/golemparts/rppal) crate that gives access to
+  gpio, pwm, spi, and more.
+  As of current, the only provided bindings are for the gpio library.
+  Support for the other functions may come later on.
+- These bindings allow you to call the rust code from python in a way that looks like any other python object
 
-``` bash
-pip install --break-system-packages --upgrade gpio-manager
-``` 
+## Features
+
+- Able to make multiple objects that can call the gpio without generating errors
+- Support for event driven io using callbacks
+- Supports software pwm
+- Allows for setting up pins as input or output
+- Works with multiple platforms
 
 ## Usage
 
@@ -20,20 +29,6 @@ pip install --break-system-packages --upgrade gpio-manager
 - To set pwm on an output pin run ```manager.set_pwm(PWM_PIN, PERIOD_MS, PULSE_WIDTH_US)```.
 - To reset a pin to its default state run ```manager.reset_pin(PIN)```.
 - To set all outputs to low and clear all interrupts run ```manager.cleanup()```.
-
-## Description
-
-- These are rust binding around
-  the [RPPAL - Raspberry Pi Peripheral Access Library](https://github.com/golemparts/rppal) crate that gives access to
-  gpio, pwm, spi, and more.
-  As of current, the only provided bindings are for the gpio library.
-  Support for the other functions may come later on.
-- These bindings allow you to call the rust code from python in a way that looks like any other python object
-
-## Features
-
-- Able to make multiple objects that can call the gpio without generating errors
-- Support for event driven io using callbacks
 
 ## Warranty
 
