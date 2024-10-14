@@ -1,8 +1,8 @@
 [project]
 name = "gpio_manager"
-version = "1.1.1"
+version = "1.1.2"
 description = "Rust bindings for the rppal crate to manage GPIO pins on a Raspberry Pi."
-readme = "readme.ms"
+readme = "readme.md"
 requires-python = ">=3.8"
 license = {file = "LICENSE"}
 keywords = ["Raspberry PI 5", "Raspberry PI 4", "GPIO"]
@@ -14,3 +14,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python"
 ]
+
+[build-system]
+requires = ["maturin>=0.12"]
+build-backend = "maturin"
