@@ -3,7 +3,15 @@ name = "gpio_manager"
 version = "1.1.0"
 edition = "2021"
 include = ["src/**/*.rs", "Cargo.toml", "Cargo.lock", "README.md", "gpio_manager.pyi"]
+authors = ["Rylan Meilutis"]
+description = "Rust bindings for the rppal crate to manage GPIO pins on a Raspberry Pi."
+license = "MIT"
 
+[tool.maturin]
+name = "gpio_manager"
+version = "1.1.0"
+description = "Rust bindings for the rppal crate to manage GPIO pins on a Raspberry Pi."
+long_description = "file: README.md"
 
 [dependencies]
 pyo3 = { version = "0.22.3", features = ["extension-module", "gil-refs"] }
