@@ -31,3 +31,10 @@ Support for the other functions may come later on.
 
 ## Support
 - If you have any issues with the library please contact me in class or via the discussion board on brightspace.
+
+## Coming Soon
+- Support for UART 
+- support for SPI
+- Support for hardware PWM
+- Support for I2C
+- Documentation on readthedocs.io
