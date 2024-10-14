@@ -34,10 +34,6 @@
 
 - This library is provided as is and is not guaranteed to work in all cases.
 
-## Support
-
-- If you have any issues with the library please contact me in class or via the discussion board on brightspace.
-
 ## Coming Soon
 
 - Support for UART

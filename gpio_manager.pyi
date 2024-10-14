@@ -95,18 +95,18 @@ class GPIOManager:
         ...
 
 class IPinState:
-    """Enum representing the GPIO pin state types."""
+    """Enum representing the GPIO pin state types for input pins."""
     PULLUP: 'IPinState'
     PULLDOWN: 'IPinState'
     NONE: 'IPinState'
 
 class OPinState:
-    """Enum representing the GPIO pin state types."""
+    """Enum representing the GPIO pin state types for output pins."""
     HIGH: 'OPinState'
     LOW: 'OPinState'
 
 class LogicLevel:
-    """Enum representing the logic levels."""
+    """Enum representing the logic levels of output pins."""
     HIGH: 'LogicLevel'
     LOW: 'LogicLevel'
 
