@@ -2,7 +2,7 @@
 
 ## Installation
 ``` bash
-pip install --break-system-packages --upgrade gpio-manager --index-url https://gitlab.rylanswebsite.com/api/v4/projects/70/packages/pypi/simple
+pip install --break-system-packages --upgrade gpio-manager
 ``` 
 
 
