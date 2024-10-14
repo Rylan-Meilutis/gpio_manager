@@ -235,7 +235,6 @@ impl GPIOManager {
         if self.is_callback_setup(pin_num) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Callback already assigned to pin"));
         }
-        println!("registered new callback");
         let callable: &Bound<PyAny> = callback.bind(py);
         if !callable.is_callable() {
             return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Object is not callable"));
