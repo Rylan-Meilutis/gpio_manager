@@ -69,7 +69,7 @@ static GPIO_MANAGER: Lazy<Arc<Mutex<GPIOManager>>> = Lazy::new(|| {
 /// ```manager.assign_callback(18, gpio_manager.TriggerEdge.FALLING, button_callback)```
 ///
 /// ```manager.set_output_pin(25, gpio_manager.OPinState.HIGH)```
-/// 
+///
 pub struct GPIOManager {
     #[cfg(target_os = "linux")]
 
@@ -132,7 +132,6 @@ impl GPIOManager {
         let manager = self.gpio.lock().unwrap();
         manager.async_interrupts.get(&pin_num).is_some()
     }
-
 }
 
 #[pymethods]
@@ -142,7 +141,7 @@ impl GPIOManager {
     ///
     /// Example usage:
     /// ```manager = gpio_manager.GPIOManager()```
-    /// 
+    ///
     fn new(py: Python) -> PyResult<Py<GPIOManager>> {
         GPIOManager::shared(py)
     }
@@ -165,15 +164,15 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num, pin_state = IPinState::NONE))]
     fn add_input_pin(&self, pin_num: u8, pin_state: IPinState) -> PyResult<()> {
         if self.is_output_pin(pin_num) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in output pins (pin is already setup as an output pin"))
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in output pins (pin is already setup as an output pin"));
         }
         let gpio = Gpio::new().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
         let input_pin = match pin_state {
             IPinState::PULLUP =>
                 gpio
-                .get(pin_num)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?
-                .into_input_pullup(), // Return the input_pullup pin
+                    .get(pin_num)
+                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?
+                    .into_input_pullup(), // Return the input_pullup pin
 
             IPinState::PULLDOWN => gpio
                 .get(pin_num)
@@ -181,7 +180,7 @@ impl GPIOManager {
                 .into_input_pulldown(), // Return the input_pulldown pin
 
             IPinState::NONE => gpio.get(pin_num)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?
+                                   .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?
                 .into_input(),
         };
 
@@ -212,7 +211,7 @@ impl GPIOManager {
         trigger_edge: TriggerEdge,
         callback: PyObject,
         args: Option<&Bound<'_, PyTuple>>, // Using Option to allow args to be None
-        debounce_time_ms: u64
+        debounce_time_ms: u64,
     ) -> PyResult<()> {
         unimplemented!("This function is only available on Linux");
     }
@@ -225,21 +224,21 @@ impl GPIOManager {
         trigger_edge: TriggerEdge,
         callback: PyObject,
         args: Option<&Bound<'_, PyTuple>>, // Using Option to allow args to be None
-        debounce_time_ms: u64
+        debounce_time_ms: u64,
     ) -> PyResult<()> {
 
         // check if the pin has an async interrupt already
         //
         if !self.is_input_pin(pin_num) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"))
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
-        if self.is_callback_setup(pin_num){
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Callback already assigned to pin"))
+        if self.is_callback_setup(pin_num) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Callback already assigned to pin"));
         }
         println!("registered new callback");
         let callable: &Bound<PyAny> = callback.bind(py);
         if !callable.is_callable() {
-            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Object is not callable"))
+            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Object is not callable"));
         }
         let empty_tuple = PyTuple::empty_bound(py);
         let args = args.unwrap_or_else(|| &empty_tuple);
@@ -250,7 +249,6 @@ impl GPIOManager {
             TriggerEdge::RISING => Trigger::RisingEdge,
             TriggerEdge::FALLING => Trigger::FallingEdge,
             TriggerEdge::BOTH => Trigger::Both,
-
         };
 
         let manager_clone = Arc::clone(&self.gpio);
@@ -306,26 +304,26 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num, pin_state = OPinState::LOW, logic_level = LogicLevel::HIGH))]
     fn add_output_pin(&self, pin_num: u8, pin_state: OPinState, logic_level: LogicLevel) -> PyResult<()> {
         if self.is_input_pin(pin_num) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin"))
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin)"));
         }
         let gpio = Gpio::new().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
         let mut output_pin = match logic_level {
             LogicLevel::HIGH => {
                 gpio
-                .get(pin_num)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?
-                .into_output_high()
-            },
+                    .get(pin_num)
+                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?
+                    .into_output_high()
+            }
             LogicLevel::LOW => {
                 gpio
-                .get(pin_num)
-                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?
-                .into_output_low()
-            },
+                    .get(pin_num)
+                    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?
+                    .into_output_low()
+            }
         };
         match pin_state {
-          OPinState::HIGH => output_pin.set_high(),
-           OPinState::LOW => output_pin.set_low(),
+            OPinState::HIGH => output_pin.set_high(),
+            OPinState::LOW => output_pin.set_low(),
         };
 
         let mut manager = self.gpio.lock().unwrap();
@@ -358,9 +356,8 @@ impl GPIOManager {
             let mut pin = pin.lock().unwrap();
             pin.set_pwm(period, pulse_width).expect("Failed to set pwm");
             Ok(())
-        }
-        else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (pin is either input or not setup"))
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (pin is either input or not setup)"))
         }
     }
 
@@ -381,7 +378,7 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num, pin_state))]
     fn set_output_pin(&self, pin_num: u8, pin_state: OPinState) -> PyResult<()> {
         if self.is_input_pin(pin_num) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is setup as an input pin"))
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is setup as an input pin)"));
         }
         let manager = self.gpio.lock().unwrap();
         if let Some(pin) = manager.output_pins.get(&pin_num) {
@@ -392,7 +389,7 @@ impl GPIOManager {
             }
             Ok(())
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (pin is either input or not setup"))
+            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (pin is either input or not setup)"))
         }
     }
 
@@ -416,7 +413,7 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num))]
     fn get_pin(&self, pin_num: u8) -> PyResult<OPinState> {
         if self.is_output_pin(pin_num) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in output pins (pin is already setup as an output pin"))
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in output pins (pin is already setup as an output pin)"));
         }
         let manager = self.gpio.lock().unwrap();
         if let Some(pin_arc) = manager.input_pins.get(&pin_num) {
@@ -427,7 +424,7 @@ impl GPIOManager {
                 Ok(OPinState::LOW)
             }
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup"))
+            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"))
         }
     }
 
@@ -448,7 +445,7 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num))]
     fn unassign_callback(&self, pin_num: u8) -> PyResult<()> {
         if !self.is_input_pin(pin_num) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"))
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
         let manager = self.gpio.lock().unwrap();
         if let Some(pin_arc) = manager.input_pins.get(&pin_num) {
@@ -462,15 +459,14 @@ impl GPIOManager {
     ///
     #[cfg(not(target_os = "linux"))]
     #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = -1))]
-    fn wait_for_edge(&self, pin_num:u8, trigger_edge:TriggerEdge, timeout_ms:i64) -> PyResult<()> {
+    fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: i64) -> PyResult<()> {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = -1))]
-    fn wait_for_edge(&self, pin_num:u8, trigger_edge:TriggerEdge, timeout_ms:i64) -> PyResult<()> {
-
-        if !self.is_input_pin(pin_num){
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"))
+    fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: i64) -> PyResult<()> {
+        if !self.is_input_pin(pin_num) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
 
         let manager = self.gpio.lock().unwrap();
@@ -478,7 +474,6 @@ impl GPIOManager {
             TriggerEdge::RISING => Trigger::RisingEdge,
             TriggerEdge::FALLING => Trigger::FallingEdge,
             TriggerEdge::BOTH => Trigger::Both,
-
         };
         let timeout = if timeout_ms < 0 {
             None
@@ -490,21 +485,48 @@ impl GPIOManager {
             pin.set_interrupt(trigger, timeout).expect("failed to setup interrupt");
             pin.poll_interrupt(false, timeout).expect("failed to poll interrupt");
         } else {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup"));
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
         Ok(())
     }
 
-    /// Cleanup the GPIO pins by seting all outputs to low and clearing all interrupts
+    /// Reset the gpio_pin allowing it to be remapped to input or output
+    #[cfg(not(target_os = "linux"))]
+    #[pyo3(signature = (pin_num))]
+    fn reset_pin(&self, pin_num: u8) -> PyResult<()> {
+        unimplemented!("This function is only available on Linux");
+    }
+
+    #[cfg(target_os = "linux")]
+    #[pyo3(signature = (pin_num))]
+    fn reset_pin(&self, pin_num: u8) -> PyResult<()> {
+        if !self.is_input_pin(pin_num) && !self.is_output_pin(pin_num) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins or output pins (Can't reset a pin that isn't setup)"));
+        }
+        let manager = self.gpio.lock().unwrap();
+        if let Some(pin_arc) = manager.input_pins.get(&pin_num) {
+            let mut manager = self.gpio.lock().unwrap();
+            let mut pin = pin_arc.lock().unwrap();
+            pin.clear_async_interrupt().expect("failed to clear interrupt");
+            manager.input_pins.remove(&pin_num);
+        } else if let Some(pin_arc) = manager.output_pins.get(&pin_num) {
+            let mut manager = self.gpio.lock().unwrap();
+            let mut pin = pin_arc.lock().unwrap();
+            pin.set_low();
+            manager.output_pins.remove(&pin_num);
+        }
+        Ok(())
+    }
+
+    /// Cleanup the GPIO pins by setting all outputs to low and clearing all interrupts
     #[cfg(not(target_os = "linux"))]
     #[pyo3(signature = ())]
-    fn cleanup(&self) -> PyResult<()>{
+    fn cleanup(&self) -> PyResult<()> {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
     #[pyo3(signature = ())]
-    fn cleanup(&self) -> PyResult<()>{
-
+    fn cleanup(&self) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
         for (_, pin) in manager.output_pins.iter() {
             let mut pin = pin.lock().unwrap();
@@ -515,7 +537,7 @@ impl GPIOManager {
             pin.clear_async_interrupt().expect("failed to clear interrupt");
         }
         Ok(())
-}
+    }
 }
 
 #[pymodule]

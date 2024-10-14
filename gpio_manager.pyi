@@ -81,6 +81,13 @@ class GPIOManager:
         """
         ...
 
+    def reset_pin(self, pin_num: int) -> None:
+        """
+        Resets the given pin so it can set to either input or output.
+        :param pin_num: The GPIO pin.
+        """
+    ...
+
     def cleanup(self) -> None:
         """
         Cleans up the GPIO pins by setting all output pins to low and clearing all interrupts.
