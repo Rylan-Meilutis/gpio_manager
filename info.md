@@ -26,7 +26,7 @@
 - To assign a callback to an input pin
   ```manager.assign_callback(BUTTON_PIN, gpio_manager.TriggerEdge.FALLING, button_callback)```.
 - To wait on an input pin to trigger an edge ```manager.wait_for_edge(BUTTON_PIN, gpio_manager.TriggerEdge.FALLING)```.
-- To setup pwm on an output pin run ```manager.setup_pwm(PWM_PIN, FREQUENCY, PULSE_WIDTH)```. (note that the pin must be setup as an output pin first, if it isn't the default values of an output pin will be used)
+- To setup pwm on an output pin run ```manager.setup_pwm(PWM_PIN, FREQUENCY, PULSE_WIDTH, gpio_manager.LogicLevel.HIGH)```. (Note that if the pin is already setup as an output, The values for the logic level and current state will be preserved.)
 - To set the duty cycle of a pwm pin run ```manager.set_pwm_duty_cycle(PWM_PIN, DUTY_CYCLE)```.
 - To set the frequency of a pwm pin run ```manager.set_pwm_frequency(PWM_PIN, FREQUENCY)```.
 - To start the pwm run ```manager.start_pwm(PWM_PIN)```.
