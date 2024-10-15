@@ -150,6 +150,17 @@ impl GPIOManager {
             }
             let period = Duration::from_millis(1000 / pwm_config.frequency);
             //pulse with is a percentage of the period
+            if pwm_config.duty_cycle == 0 {
+                pin.set_low();
+                return Ok(());
+            }
+            if pwm_config.duty_cycle == 100 {
+                pin.set_high();
+                return Ok(());
+            }
+            if pwm_config.duty_cycle > 100 || pwm_config.duty_cycle < 0 {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", pwm_config.duty_cycle)));
+            }
             let pulse_width = Duration::from_micros((period.as_micros() as f64 * (pwm_config.duty_cycle as f64 / 100.0)) as u64);
             pin.set_pwm(period, pulse_width).expect("Failed to set pwm");
             Ok(())
@@ -371,20 +382,23 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.set_pwm(25, 20, 1200)```
     #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0))]
-    fn set_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64) -> PyResult<()> {
+    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0, logic_level = LogicLevel::HIGH))]
+    fn setup_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64, logic_level:LogicLevel) -> PyResult<()> {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
-    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0))]
-    fn setup_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64) -> PyResult<()> {
+    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0, logic_level = LogicLevel::HIGH))]
+    fn setup_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64, logic_level:LogicLevel) -> PyResult<()> {
+        if duty_cycle > 100 || duty_cycle < 0{
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", pwm_config.duty_cycle)));
+        }
         let mut manager = self.gpio.lock().unwrap();
         if self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin)"));
         }
         if !self.is_output_pin(pin_num, &manager) {
             drop(manager);
-            self.add_output_pin(pin_num, OPinState::LOW, LogicLevel::HIGH)?;
+            self.add_output_pin(pin_num, OPinState::LOW, logic_level)?;
             manager = self.gpio.lock().unwrap();
         }
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
@@ -411,6 +425,9 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, duty_cycle = 0))]
     fn set_pwm_duty_cycle(&self, pin_num: u8, duty_cycle: u64) -> PyResult<()> {
+        if duty_cycle > 100 || duty_cycle < 0 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", pwm_config.duty_cycle)));
+        }
         let mut manager = self.gpio.lock().unwrap();
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
             manager.pwm_setup.get_mut(&pin_num).unwrap().duty_cycle = duty_cycle;
@@ -500,6 +517,9 @@ impl GPIOManager {
         let manager = self.gpio.lock().unwrap();
         if self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is setup as an input pin)"));
+        }
+        if let Some(_) = manager.pwm_setup.get(&pin_num) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin configured for PWM, please reset the pin to use as regular output pin"));
         }
         if let Some(pin) = manager.output_pins.get(&pin_num) {
             let mut pin = pin.lock().unwrap();
