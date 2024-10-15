@@ -146,18 +146,12 @@ impl GPIOManager {
         if let Some(pwm_config) = manager.pwm_setup.get(&pin) {
             let mut pin = manager.output_pins.get(&pin).unwrap().lock().unwrap();
             if !pwm_config.is_active {
-                let period = if pwm_config.frequency == 0 {
-                    Duration::from_millis(0)
+                pin.clear_pwm().expect("Failed to set pwm");
+                if pwm_config.logic_level == LogicLevel::LOW {
+                    pin.set_high();
                 } else {
-                    Duration::from_millis(1000 / pwm_config.frequency)
-                };
-
-                let pulse_width = if pwm_config.logic_level == LogicLevel::LOW {
-                    Duration::from_micros(period.as_micros() as u64)
-                } else {
-                    Duration::from_micros(0)
-                };
-                pin.set_pwm(period, pulse_width).expect("Failed to set pwm");
+                    pin.set_low();
+                }
                 return Ok(());
             }
             let period = if pwm_config.frequency == 0 {
@@ -411,7 +405,12 @@ impl GPIOManager {
         }
         if !self.is_output_pin(pin_num, &manager) {
             drop(manager);
-            self.add_output_pin(pin_num, OPinState::LOW, logic_level)?;
+            if logic_level == LogicLevel::LOW {
+                self.add_output_pin(pin_num, OPinState::HIGH, logic_level)?;
+            } else {
+                self.add_output_pin(pin_num, OPinState::LOW, logic_level)?;
+            }
+
             manager = self.gpio.lock().unwrap();
         }
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
