@@ -19,6 +19,7 @@ struct PinManager {
 struct PwmConfig {
     frequency: u64,
     duty_cycle: u64,
+    logic_level: LogicLevel,
     is_active: bool,
 }
 
@@ -117,7 +118,7 @@ impl GPIOManager {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
-    fn is_input_pin(&self, pin_num: u8, manager:&MutexGuard<PinManager>) -> bool {
+    fn is_input_pin(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
         manager.input_pins.get(&pin_num).is_some()
     }
     #[cfg(not(target_os = "linux"))]
@@ -125,7 +126,7 @@ impl GPIOManager {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
-    fn is_output_pin(&self, pin_num: u8, manager:&MutexGuard<PinManager>) -> bool {
+    fn is_output_pin(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
         manager.output_pins.get(&pin_num).is_some()
     }
 
@@ -135,33 +136,43 @@ impl GPIOManager {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
-    fn is_callback_setup(&self, pin_num: u8, manager:&MutexGuard<PinManager>) -> bool {
+    fn is_callback_setup(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
         manager.async_interrupts.get(&pin_num).is_some()
     }
 
     #[cfg(target_os = "linux")]
-    fn set_pwm(&self, pin:u8) -> PyResult<()> {
+    fn set_pwm(&self, pin: u8) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
         if let Some(pwm_config) = manager.pwm_setup.get(&pin) {
             let mut pin = manager.output_pins.get(&pin).unwrap().lock().unwrap();
-            if !pwm_config.is_active{
-                pin.set_pwm(Duration::from_millis(0), Duration::from_millis(0)).expect("Failed to set pwm");
+            if !pwm_config.is_active {
+                let period = if pwm_config.frequency == 0 {
+                    Duration::from_millis(0)
+                } else {
+                    Duration::from_millis(1000 / pwm_config.frequency)
+                };
+
+                let pulse_width = if pwm_config.logic_level == LogicLevel::LOW {
+                    Duration::from_micros(period.as_micros() as u64)
+                } else {
+                    Duration::from_micros(0)
+                };
+                pin.set_pwm(period, pulse_width).expect("Failed to set pwm");
                 return Ok(());
             }
-            let period = Duration::from_millis(1000 / pwm_config.frequency);
-            //pulse with is a percentage of the period
-            if pwm_config.duty_cycle == 0 {
-                pin.set_low();
-                return Ok(());
-            }
-            if pwm_config.duty_cycle == 100 {
-                pin.set_high();
-                return Ok(());
-            }
-            if pwm_config.duty_cycle > 100 || pwm_config.duty_cycle < 0 {
+            let period = if pwm_config.frequency == 0 {
+                Duration::from_millis(0)
+            } else {
+                Duration::from_millis(1000 / pwm_config.frequency)
+            };
+            if pwm_config.duty_cycle > 100 {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", pwm_config.duty_cycle)));
             }
-            let pulse_width = Duration::from_micros((period.as_micros() as f64 * (pwm_config.duty_cycle as f64 / 100.0)) as u64);
+            let pulse_width = if pwm_config.logic_level == LogicLevel::LOW {
+                Duration::from_micros((period.as_micros() as f64 * ((100f64 - pwm_config.duty_cycle as f64) / 100.0)) as u64)
+            } else {
+                Duration::from_micros((period.as_micros() as f64 * (pwm_config.duty_cycle as f64 / 100.0)) as u64)
+            };
             pin.set_pwm(period, pulse_width).expect("Failed to set pwm");
             Ok(())
         } else {
@@ -382,14 +393,16 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.set_pwm(25, 20, 1200)```
     #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0, logic_level = LogicLevel::HIGH))]
-    fn setup_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64, logic_level:LogicLevel) -> PyResult<()> {
+    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0, logic_level = LogicLevel::HIGH)
+    )]
+    fn setup_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64, logic_level: LogicLevel) -> PyResult<()> {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
-    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0, logic_level = LogicLevel::HIGH))]
-    fn setup_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64, logic_level:LogicLevel) -> PyResult<()> {
-        if duty_cycle > 100 || duty_cycle < 0{
+    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0, logic_level = LogicLevel::HIGH)
+    )]
+    fn setup_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64, logic_level: LogicLevel) -> PyResult<()> {
+        if duty_cycle > 100 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle)));
         }
         let mut manager = self.gpio.lock().unwrap();
@@ -408,6 +421,7 @@ impl GPIOManager {
             manager.pwm_setup.insert(pin_num, PwmConfig {
                 frequency: frequency_hz,
                 duty_cycle,
+                logic_level,
                 is_active: false,
             });
             Ok(())
@@ -425,7 +439,7 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, duty_cycle = 0))]
     fn set_pwm_duty_cycle(&self, pin_num: u8, duty_cycle: u64) -> PyResult<()> {
-        if duty_cycle > 100 || duty_cycle < 0 {
+        if duty_cycle > 100 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle)));
         }
         let mut manager = self.gpio.lock().unwrap();
@@ -450,6 +464,7 @@ impl GPIOManager {
         let mut manager = self.gpio.lock().unwrap();
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
             manager.pwm_setup.get_mut(&pin_num).unwrap().frequency = frequency_hz;
+            drop(manager);
             self.set_pwm(pin_num)?;
             Ok(())
         } else {
@@ -643,28 +658,55 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num))]
     fn reset_pin(&self, pin_num: u8) -> PyResult<()> {
+        // Lock the manager to start
         let manager = self.gpio.lock().unwrap();
 
-        if !self.is_input_pin(pin_num, &manager) && !self.is_output_pin(pin_num, &manager) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins or output pins (Can't reset a pin that isn't setup)"));
-        }
-        if let Some(pin_arc) = manager.input_pins.get(&pin_num) {
-            let mut manager = self.gpio.lock().unwrap();
+        // Temporary variable to hold the pin if it's found
+        let input_pin_arc = manager.input_pins.get(&pin_num).cloned();
+        let output_pin_arc = manager.output_pins.get(&pin_num).cloned();
+
+        // Unlock manager before working with pins
+        drop(manager);
+
+
+        // Handle input pins
+        if let Some(pin_arc) = input_pin_arc {
             let mut pin = pin_arc.lock().unwrap();
-            pin.clear_async_interrupt().expect("failed to clear interrupt");
+            pin.clear_async_interrupt().expect("Failed to clear interrupt");
+
+            // Re-lock manager to remove the input pin
+            let mut manager = self.gpio.lock().unwrap();
             manager.input_pins.remove(&pin_num);
-        } else if let Some(pin_arc) = manager.output_pins.get(&pin_num) {
-            let mut manager = self.gpio.lock().unwrap();
-            let mut pin = pin_arc.lock().unwrap();
-            pin.set_low();
-            if let Some(pwm_config) = manager.pwm_setup.get(&pin_num) {
-                if pwm_config.is_active {
-                    pin.set_pwm(Duration::from_millis(0), Duration::from_millis(0)).expect("Failed to set pwm");
-                }
+        }
+        // Handle output pins
+        else if let Some(pin_arc) = output_pin_arc {
+
+            // Check if this pin has a PWM setup and reset PWM if necessary
+            let pwm_exists = {
+                let manager = self.gpio.lock().unwrap();
+                manager.pwm_setup.get(&pin_num).is_some()
+            };
+
+            if pwm_exists {
+                // Stop PWM and reset it
+                self.stop_pwm(pin_num)?;
+
+                // Re-lock the manager to remove the pin from PWM setup
+                let mut manager = self.gpio.lock().unwrap();
                 manager.pwm_setup.remove(&pin_num);
             }
+            else{
+                let mut pin = pin_arc.lock().unwrap();
+
+                pin.set_low();
+                drop(pin);
+            }
+
+            // Re-lock manager to remove the output pin
+            let mut manager = self.gpio.lock().unwrap();
             manager.output_pins.remove(&pin_num);
         }
+
         Ok(())
     }
 
@@ -684,28 +726,23 @@ impl GPIOManager {
             .iter()
             .map(|(&pin_num, pin_arc)| (pin_num, Arc::clone(pin_arc)))
             .collect();
-        let input_pins: Vec<Arc<Mutex<InputPin>>> = manager.input_pins.values().cloned().collect();
-        let pwm_pins: Vec<u8> = manager.pwm_setup.keys().cloned().collect();
+        let input_pins:Vec<(u8, Arc<Mutex<InputPin>>)> = manager
+            .input_pins
+            .iter()
+            .map(|(&pin_num, pin_arc)| (pin_num, Arc::clone(pin_arc)))
+            .collect();
         drop(manager); // Release the lock on manager
 
-        // Iterate over output pins
-        for (pin_num, pin_arc) in output_pins {
-            let mut pin = pin_arc.lock().unwrap();
-
-            // If the pin is configured for PWM, set PWM to zero
-            if pwm_pins.contains(&pin_num) {
-                pin.set_pwm(Duration::from_millis(0), Duration::from_millis(0))
-                    .expect("Failed to set PWM to zero");
-            }
-
-            // Set the pin to low
-            pin.set_low();
-        }
 
         // Iterate over input pins
-        for pin_arc in input_pins {
-            let mut pin = pin_arc.lock().unwrap();
-            pin.clear_async_interrupt().expect("Failed to clear interrupt");
+        for (pin_num, _pin_arc) in input_pins {
+            self.reset_pin(pin_num)?;
+        }
+
+        // Iterate over output pins
+        for (pin_num, _pin_arc) in output_pins {
+            // If the pin is configured for PWM, set PWM to zero
+            self.reset_pin(pin_num)?;
         }
 
         Ok(())
