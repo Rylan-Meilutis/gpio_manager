@@ -3,7 +3,7 @@ use pyo3::PyObject;
 #[cfg(target_os = "linux")]
 use rppal::gpio::{Gpio, InputPin, OutputPin, Trigger};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
 use once_cell::sync::Lazy;
 use pyo3::types::PyTuple;
@@ -14,7 +14,14 @@ struct PinManager {
     output_pins: HashMap<u8, Arc<Mutex<OutputPin>>>,
     callbacks: HashMap<u8, PyObject>,
     async_interrupts: HashMap<u8, bool>,
+    pwm_setup: HashMap<u8, PwmConfig>,
 }
+struct PwmConfig {
+    frequency: u64,
+    duty_cycle: u64,
+    is_active: bool,
+}
+
 
 #[pyclass(eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -90,6 +97,7 @@ impl GPIOManager {
                 output_pins: HashMap::new(),
                 callbacks: HashMap::new(),
                 async_interrupts: HashMap::new(),
+                pwm_setup: HashMap::new(),
             })),
         })
     }
@@ -109,8 +117,7 @@ impl GPIOManager {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
-    fn is_input_pin(&self, pin_num: u8) -> bool {
-        let manager = self.gpio.lock().unwrap();
+    fn is_input_pin(&self, pin_num: u8, manager:&MutexGuard<PinManager>) -> bool {
         manager.input_pins.get(&pin_num).is_some()
     }
     #[cfg(not(target_os = "linux"))]
@@ -118,19 +125,37 @@ impl GPIOManager {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
-    fn is_output_pin(&self, pin_num: u8) -> bool {
-        let manager = self.gpio.lock().unwrap();
+    fn is_output_pin(&self, pin_num: u8, manager:&MutexGuard<PinManager>) -> bool {
         manager.output_pins.get(&pin_num).is_some()
     }
+
 
     #[cfg(not(target_os = "linux"))]
     fn is_callback_setup(&self, pin_num: u8) -> bool {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
-    fn is_callback_setup(&self, pin_num: u8) -> bool {
-        let manager = self.gpio.lock().unwrap();
+    fn is_callback_setup(&self, pin_num: u8, manager:&MutexGuard<PinManager>) -> bool {
         manager.async_interrupts.get(&pin_num).is_some()
+    }
+
+    #[cfg(target_os = "linux")]
+    fn set_pwm(&self, pin:u8) -> PyResult<()> {
+        let manager = self.gpio.lock().unwrap();
+        if let Some(pwm_config) = manager.pwm_setup.get(&pin) {
+            let mut pin = manager.output_pins.get(&pin).unwrap().lock().unwrap();
+            if !pwm_config.is_active{
+                pin.set_pwm(Duration::from_millis(0), Duration::from_millis(0)).expect("Failed to set pwm");
+                return Ok(());
+            }
+            let period = Duration::from_millis(1000 / pwm_config.frequency);
+            //pulse with is a percentage of the period
+            let pulse_width = Duration::from_micros((period.as_micros() as f64 * (pwm_config.duty_cycle as f64 / 100.0)) as u64);
+            pin.set_pwm(period, pulse_width).expect("Failed to set pwm");
+            Ok(())
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not setup for pwm"))
+        }
     }
 }
 
@@ -163,7 +188,8 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, pin_state = IPinState::NONE))]
     fn add_input_pin(&self, pin_num: u8, pin_state: IPinState) -> PyResult<()> {
-        if self.is_output_pin(pin_num) {
+        let mut manager = self.gpio.lock().unwrap();
+        if self.is_output_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in output pins (pin is already setup as an output pin"));
         }
         let gpio = Gpio::new().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
@@ -180,11 +206,10 @@ impl GPIOManager {
                 .into_input_pulldown(), // Return the input_pulldown pin
 
             IPinState::NONE => gpio.get(pin_num)
-                                   .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?
+                .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?
                 .into_input(),
         };
 
-        let mut manager = self.gpio.lock().unwrap();
         manager.input_pins.insert(pin_num, Arc::new(Mutex::new(input_pin)));
 
         Ok(())
@@ -229,12 +254,15 @@ impl GPIOManager {
 
         // check if the pin has an async interrupt already
         //
-        if !self.is_input_pin(pin_num) {
+        let manager = self.gpio.lock().unwrap();
+
+        if !self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
-        if self.is_callback_setup(pin_num) {
+        if self.is_callback_setup(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Callback already assigned to pin"));
         }
+        drop(manager);
         let callable: &Bound<PyAny> = callback.bind(py);
         if !callable.is_callable() {
             return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Object is not callable"));
@@ -255,6 +283,7 @@ impl GPIOManager {
             let py_callback_clone = callback.clone_ref(py);
             let mut manager = manager_clone.lock().unwrap();
             manager.callbacks.insert(pin_num, py_callback_clone);
+            drop(manager);
         });
 
         let pin_arc = {
@@ -282,6 +311,7 @@ impl GPIOManager {
         }).expect("Error setting up async interrupt");
         let mut manager = manager_clone.lock().unwrap();
         manager.async_interrupts.insert(pin_num, true);
+        drop(manager);
 
         Ok(())
     }
@@ -302,7 +332,8 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, pin_state = OPinState::LOW, logic_level = LogicLevel::HIGH))]
     fn add_output_pin(&self, pin_num: u8, pin_state: OPinState, logic_level: LogicLevel) -> PyResult<()> {
-        if self.is_input_pin(pin_num) {
+        let mut manager = self.gpio.lock().unwrap();
+        if self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin)"));
         }
         let gpio = Gpio::new().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
@@ -325,7 +356,6 @@ impl GPIOManager {
             OPinState::LOW => output_pin.set_low(),
         };
 
-        let mut manager = self.gpio.lock().unwrap();
         manager.output_pins.insert(pin_num, Arc::new(Mutex::new(output_pin)));
 
         Ok(())
@@ -341,24 +371,113 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.set_pwm(25, 20, 1200)```
     #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, period_ms = 20, pulse_width_us = 0))]
-    fn set_pwm(&self, pin_num: u8, period_ms: u64, pulse_width_us: u64) -> PyResult<()> {
+    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0))]
+    fn set_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64) -> PyResult<()> {
         unimplemented!("This function is only available on Linux");
     }
     #[cfg(target_os = "linux")]
-    #[pyo3(signature = (pin_num, period_ms = 20, pulse_width_us = 0))]
-    fn set_pwm(&self, pin_num: u8, period_ms: u64, pulse_width_us: u64) -> PyResult<()> {
-        let manager = self.gpio.lock().unwrap();
-        let period = Duration::from_millis(period_ms);
-        let pulse_width = Duration::from_micros(pulse_width_us);
-        if let Some(pin) = manager.output_pins.get(&pin_num) {
-            let mut pin = pin.lock().unwrap();
-            pin.set_pwm(period, pulse_width).expect("Failed to set pwm");
+    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0))]
+    fn setup_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64) -> PyResult<()> {
+        let mut manager = self.gpio.lock().unwrap();
+        if self.is_input_pin(pin_num, &manager) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin)"));
+        }
+        if !self.is_output_pin(pin_num, &manager) {
+            self.add_output_pin(pin_num, OPinState::LOW, LogicLevel::HIGH)?;
+        }
+        if let Some(_) = manager.pwm_setup.get(&pin_num) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin already configured for PWM"));
+        }
+        if self.is_output_pin(pin_num, &manager) {
+            manager.pwm_setup.insert(pin_num, PwmConfig {
+                frequency: frequency_hz,
+                duty_cycle,
+                is_active: false,
+            });
             Ok(())
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (pin is either input or not setup)"))
         }
     }
+
+
+    #[cfg(not(target_os = "linux"))]
+    #[pyo3(signature = (pin_num, duty_cycle = 0))]
+    fn set_pwm_duty_cycle(&self, pin_num: u8, duty_cycle: u64) -> PyResult<()> {
+        unimplemented!("This function is only available on Linux");
+    }
+    #[cfg(target_os = "linux")]
+    #[pyo3(signature = (pin_num, duty_cycle = 0))]
+    fn set_pwm_duty_cycle(&self, pin_num: u8, duty_cycle: u64) -> PyResult<()> {
+        let mut manager = self.gpio.lock().unwrap();
+        if let Some(_) = manager.pwm_setup.get(&pin_num) {
+            manager.pwm_setup.get_mut(&pin_num).unwrap().duty_cycle = duty_cycle;
+            drop(manager);
+            self.set_pwm(pin_num)?;
+            Ok(())
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not setup for PWM"))
+        }
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    #[pyo3(signature = (pin_num, frequency_hz = 60))]
+    fn set_pwm_frequency(&self, pin_num: u8, frequency_hz: u64) -> PyResult<()> {
+        unimplemented!("This function is only available on Linux");
+    }
+    #[cfg(target_os = "linux")]
+    #[pyo3(signature = (pin_num, frequency_hz = 60))]
+    fn set_pwm_frequency(&self, pin_num: u8, frequency_hz: u64) -> PyResult<()> {
+        let mut manager = self.gpio.lock().unwrap();
+        if let Some(_) = manager.pwm_setup.get(&pin_num) {
+            manager.pwm_setup.get_mut(&pin_num).unwrap().frequency = frequency_hz;
+            self.set_pwm(pin_num)?;
+            Ok(())
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not setup for pwm"))
+        }
+    }
+
+
+    #[cfg(not(target_os = "linux"))]
+    #[pyo3(signature = (pin_num))]
+    fn start_pwm(&self, pin_num: u8) -> PyResult<()> {
+        unimplemented!("This function is only available on Linux");
+    }
+    #[cfg(target_os = "linux")]
+    #[pyo3(signature = (pin_num))]
+    fn start_pwm(&self, pin_num: u8) -> PyResult<()> {
+        let mut manager = self.gpio.lock().unwrap();
+        if let Some(_) = manager.output_pins.get(&pin_num) {
+            manager.pwm_setup.get_mut(&pin_num).unwrap().is_active = true;
+            drop(manager);
+            self.set_pwm(pin_num)?;
+            Ok(())
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (pin is either input or not setup)"))
+        }
+    }
+
+
+    #[cfg(not(target_os = "linux"))]
+    #[pyo3(signature = (pin_num))]
+    fn stop_pwm(&self, pin_num: u8) -> PyResult<()> {
+        unimplemented!("This function is only available on Linux");
+    }
+    #[cfg(target_os = "linux")]
+    #[pyo3(signature = (pin_num))]
+    fn stop_pwm(&self, pin_num: u8) -> PyResult<()> {
+        let mut manager = self.gpio.lock().unwrap();
+        if let Some(_) = manager.output_pins.get(&pin_num) {
+            manager.pwm_setup.get_mut(&pin_num).unwrap().is_active = false;
+            drop(manager);
+            self.set_pwm(pin_num)?;
+            Ok(())
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (pin is either input or not setup)"))
+        }
+    }
+
 
     /// Sets the state of an output pin.
     ///
@@ -376,10 +495,10 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, pin_state))]
     fn set_output_pin(&self, pin_num: u8, pin_state: OPinState) -> PyResult<()> {
-        if self.is_input_pin(pin_num) {
+        let manager = self.gpio.lock().unwrap();
+        if self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is setup as an input pin)"));
         }
-        let manager = self.gpio.lock().unwrap();
         if let Some(pin) = manager.output_pins.get(&pin_num) {
             let mut pin = pin.lock().unwrap();
             match pin_state {
@@ -411,10 +530,11 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num))]
     fn get_pin(&self, pin_num: u8) -> PyResult<OPinState> {
-        if self.is_output_pin(pin_num) {
+        let manager = self.gpio.lock().unwrap();
+
+        if self.is_output_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in output pins (pin is already setup as an output pin)"));
         }
-        let manager = self.gpio.lock().unwrap();
         if let Some(pin_arc) = manager.input_pins.get(&pin_num) {
             let pin = pin_arc.lock().unwrap();
             if pin.is_high() {
@@ -443,10 +563,11 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num))]
     fn unassign_callback(&self, pin_num: u8) -> PyResult<()> {
-        if !self.is_input_pin(pin_num) {
+        let manager = self.gpio.lock().unwrap();
+
+        if !self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
-        let manager = self.gpio.lock().unwrap();
         if let Some(pin_arc) = manager.input_pins.get(&pin_num) {
             let mut pin = pin_arc.lock().unwrap();
             pin.clear_async_interrupt().expect("failed to clear interrupt");
@@ -464,11 +585,12 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = -1))]
     fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: i64) -> PyResult<()> {
-        if !self.is_input_pin(pin_num) {
+        let manager = self.gpio.lock().unwrap();
+
+        if !self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
 
-        let manager = self.gpio.lock().unwrap();
         let trigger = match trigger_edge {
             TriggerEdge::RISING => Trigger::RisingEdge,
             TriggerEdge::FALLING => Trigger::FallingEdge,
@@ -499,10 +621,11 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num))]
     fn reset_pin(&self, pin_num: u8) -> PyResult<()> {
-        if !self.is_input_pin(pin_num) && !self.is_output_pin(pin_num) {
+        let manager = self.gpio.lock().unwrap();
+
+        if !self.is_input_pin(pin_num, &manager) && !self.is_output_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins or output pins (Can't reset a pin that isn't setup)"));
         }
-        let manager = self.gpio.lock().unwrap();
         if let Some(pin_arc) = manager.input_pins.get(&pin_num) {
             let mut manager = self.gpio.lock().unwrap();
             let mut pin = pin_arc.lock().unwrap();
@@ -512,6 +635,12 @@ impl GPIOManager {
             let mut manager = self.gpio.lock().unwrap();
             let mut pin = pin_arc.lock().unwrap();
             pin.set_low();
+            if let Some(pwm_config) = manager.pwm_setup.get(&pin_num) {
+                if pwm_config.is_active {
+                    pin.set_pwm(Duration::from_millis(0), Duration::from_millis(0)).expect("Failed to set pwm");
+                }
+                manager.pwm_setup.remove(&pin_num);
+            }
             manager.output_pins.remove(&pin_num);
         }
         Ok(())
@@ -526,18 +655,41 @@ impl GPIOManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = ())]
     fn cleanup(&self) -> PyResult<()> {
+        // Lock the manager and collect the necessary data
         let manager = self.gpio.lock().unwrap();
-        for (_, pin) in manager.output_pins.iter() {
-            let mut pin = pin.lock().unwrap();
+        let output_pins: Vec<(u8, Arc<Mutex<OutputPin>>)> = manager
+            .output_pins
+            .iter()
+            .map(|(&pin_num, pin_arc)| (pin_num, Arc::clone(pin_arc)))
+            .collect();
+        let input_pins: Vec<Arc<Mutex<InputPin>>> = manager.input_pins.values().cloned().collect();
+        let pwm_pins: Vec<u8> = manager.pwm_setup.keys().cloned().collect();
+        drop(manager); // Release the lock on manager
+
+        // Iterate over output pins
+        for (pin_num, pin_arc) in output_pins {
+            let mut pin = pin_arc.lock().unwrap();
+
+            // If the pin is configured for PWM, set PWM to zero
+            if pwm_pins.contains(&pin_num) {
+                pin.set_pwm(Duration::from_millis(0), Duration::from_millis(0))
+                    .expect("Failed to set PWM to zero");
+            }
+
+            // Set the pin to low
             pin.set_low();
         }
-        for (_, pin) in manager.input_pins.iter() {
-            let mut pin = pin.lock().unwrap();
-            pin.clear_async_interrupt().expect("failed to clear interrupt");
+
+        // Iterate over input pins
+        for pin_arc in input_pins {
+            let mut pin = pin_arc.lock().unwrap();
+            pin.clear_async_interrupt().expect("Failed to clear interrupt");
         }
+
         Ok(())
     }
 }
+
 
 #[pymodule]
 fn gpio_manager(m: &Bound<'_, PyModule>) -> PyResult<()> {

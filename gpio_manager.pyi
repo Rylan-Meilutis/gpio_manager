@@ -72,12 +72,43 @@ class GPIOManager:
         """
         ...
 
-    def set_pwm(self, pin_num: int, period_ms: int = 20, pulse_with_us: int = 0) -> None:
+    def setup_pwm(self, pin_num, frequency_hz = 60, duty_cycle = 0) -> None:
         """
-        Sets up a PWM signal on the given pin.
+        Sets up a PWM signal on the given pin. The pin must be set up as an output pin before calling this function or
+        the default values will be used when creating it (output low and logic high).
         :param pin_num: The GPIO pin.
-        :param period_ms: The period of the pwm signal in milliseconds.
-        :param pulse_with_us: The pulse width of the pwm signal in microseconds.
+        :param frequency_hz: The period of the pwm signal in hertz.
+        :param duty_cycle: The pulse width of the pwm signal as a percentage of the frequency.
+        """
+        ...
+
+    def set_pwm_duty_cycle(self, pin_num, duty_cycle) -> None:
+        """
+        Sets the PWM signal's duty cycle.
+        :param pin_num: The GPIO pin.
+        :param duty_cycle: The pulse width of the pwm signal as a percentage of the frequency.
+        """
+        ...
+
+    def set_pwm_frequency(self, pin_num, frequency_hz) -> None:
+        """
+        Sets the PWM signal's frequency.
+        :param pin_num: The GPIO pin.
+        :param frequency_hz: The period of the pwm signal in hertz.
+        """
+        ...
+
+    def start_pwm(self, pin_num) -> None:
+        """
+        Starts the PWM signal.
+        :param pin_num: The GPIO pin.
+        """
+        ...
+
+    def stop_pwm(self, pin_num) -> None:
+        """
+        Stops the PWM signal.
+        :param pin_num: The GPIO pin.
         """
         ...
 
