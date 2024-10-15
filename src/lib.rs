@@ -383,7 +383,9 @@ impl GPIOManager {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin)"));
         }
         if !self.is_output_pin(pin_num, &manager) {
+            drop(manager);
             self.add_output_pin(pin_num, OPinState::LOW, LogicLevel::HIGH)?;
+            manager = self.gpio.lock().unwrap();
         }
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin already configured for PWM"));
