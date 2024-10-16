@@ -5,13 +5,13 @@ class PWMManager:
         """Initializes a new PWMManager instance."""
         ...
 
-    def setup_pwm_channel(self, channel_num: int, frequency_hz: float = 60.0, duty_cycle: float = 0.5, polarity: 'PWMPolarity' = 'PWMPolarity.NORMAL') -> None:
+    def setup_pwm_channel(self, channel_num: int, frequency_hz: float = 60.0, duty_cycle: int = 00, polarity: 'PWMPolarity' = 'PWMPolarity.NORMAL') -> None:
         """
         Sets up a PWM channel with the specified parameters.
 
         :param channel_num: The PWM channel number (0 or 1).
         :param frequency_hz: The frequency in Hertz.
-        :param duty_cycle: The duty cycle (0.0 to 1.0).
+        :param duty_cycle: The duty cycle (0 to 100).
         :param polarity: The polarity of the PWM signal (set using PWMPolarity.[NORMAL or INVERSE]).
         """
         ...
@@ -40,12 +40,12 @@ class PWMManager:
         """
         ...
 
-    def set_duty_cycle(self, channel_num: int, duty_cycle: float) -> None:
+    def set_duty_cycle(self, channel_num: int, duty_cycle: int) -> None:
         """
         Sets the duty cycle for the specified PWM channel.
 
         :param channel_num: The PWM channel number (0 or 1).
-        :param duty_cycle: The new duty cycle (0.0 to 1.0).
+        :param duty_cycle: The new duty cycle (0 to 100).
         """
         ...
 
@@ -67,11 +67,21 @@ class PWMManager:
         """
         ...
 
-    def get_duty_cycle(self, channel_num: int) -> float:
+    def get_duty_cycle(self, channel_num: int) -> int:
         """
         Gets the current duty cycle of the specified PWM channel.
 
         :param channel_num: The PWM channel number (0 or 1).
-        :return: The current duty cycle (0.0 to 1.0).
+        :return: The current duty cycle (0 to 100).
         """
         ...
+
+    def reset(self, channel_num) -> None:
+        """
+        :param channel_num: The PWM channel number (0 or 1).
+        """
+
+    def cleanup(self) -> None:
+        """
+        Sets all PWM channels to the disabled state and clears them from the set list
+        """

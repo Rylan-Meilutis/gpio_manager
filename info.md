@@ -98,6 +98,7 @@
   ```python
   manager.cleanup()
   ```
+---
 
 ### PWM
 
@@ -110,12 +111,12 @@
 - To set up a PWM channel:
 
   ```python
-  pwm_manager.setup_pwm_channel(CHANNEL_NUM, frequency_hz=1000.0, duty_cycle=0.5, polarity=pwm_manager.PWMPolarity.NORMAL)
+  pwm_manager.setup_pwm_channel(CHANNEL_NUM, frequency_hz=1000.0, duty_cycle=0, polarity=pwm_manager.PWMPolarity.NORMAL)
   ```
 
   - `CHANNEL_NUM`: The PWM channel number (either 0 or 1).
   - `frequency_hz`: The frequency of the PWM signal in Hertz.
-  - `duty_cycle`: The duty cycle of the PWM signal as a percentage (from 0.0 to 1.0).
+  - `duty_cycle`: The duty cycle of the PWM signal as a percentage (from 0 to 100).
   - `polarity`: The polarity of the PWM signal (can be set to `PWMPolarity.NORMAL` or `PWMPolarity.INVERSE`).
 
 - To start the PWM signal on a specified channel:
@@ -139,11 +140,11 @@
 - To set the duty cycle for a PWM channel:
 
   ```python
-  pwm_manager.set_duty_cycle(CHANNEL_NUM, duty_cycle=0.75)
+  pwm_manager.set_duty_cycle(CHANNEL_NUM, duty_cycle=75)
   ```
 
   - `CHANNEL_NUM`: The PWM channel number (either 0 or 1).
-  - `duty_cycle`: The new duty cycle (from 0.0 to 1.0).
+  - `duty_cycle`: The new duty cycle (from 0 to 100).
 
 - To set the frequency for a PWM channel:
 
@@ -165,6 +166,7 @@
   ```python
   duty_cycle = pwm_manager.get_duty_cycle(CHANNEL_NUM)
   ```
+---
 
 ### I2C
 
