@@ -23,7 +23,7 @@ static GPIO_MANAGER: Lazy<Arc<Mutex<GPIOManager>>> = Lazy::new(|| {
 ///
 /// ```manager = gpio_manager.GPIOManager()```
 ///
-/// ```manager.add_input_pin(18, gpio_manager.IPinState.PULLUP))```
+/// ```manager.add_input_pin(18, gpio_manager.IPinState.PULLUP)```
 ///
 /// ```manager.assign_callback(18, gpio_manager.TriggerEdge.FALLING, button_callback)```
 ///
@@ -260,7 +260,6 @@ impl GPIOManager {
             manager.callbacks.get(&pin_num).unwrap().clone_ref(py)
         });
 
-        // Use rppal's async interrupt handler without spawning a thread
         let mut pin = pin_arc.lock().unwrap();
         pin.set_async_interrupt(trigger, Some(Duration::from_millis(debounce_time_ms)), move |_event| {
             // Re-acquire the GIL for calling the Python callback
