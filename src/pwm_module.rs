@@ -76,7 +76,7 @@ impl PWMManager {
     /// Parameters:
     /// - `channel_num` (int): The PWM channel number (0 or 1).
     /// - `frequency_hz` (float): The frequency in Hertz.
-    /// - `duty_cycle` (float): The duty cycle (0.0 to 1.0).
+    /// - `duty_cycle` (int): The duty cycle (0 to 100).
     /// - `polarity` (PWMPolarity): The polarity of the PWM signal.
     ///
     /// Example usage:
@@ -90,8 +90,8 @@ impl PWMManager {
     }
 
     #[cfg(target_os = "linux")]
-    #[pyo3(signature = (channel_num, frequency_hz = 60.0, duty_cycle = 0.5, polarity = PWMPolarity::NORMAL))]
-    fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: f64, duty_cycle: f64, polarity: PWMPolarity) -> PyResult<()> {
+    #[pyo3(signature = (channel_num, frequency_hz = 60.0, duty_cycle = 0, polarity = PWMPolarity::NORMAL))]
+    fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: f64, duty_cycle: u64, polarity: PWMPolarity) -> PyResult<()> {
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
 
         if pwm_channels.contains_key(&channel_num) {
@@ -104,13 +104,13 @@ impl PWMManager {
             _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
         };
 
-        if duty_cycle < 0.0 || duty_cycle > 1.0 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Duty cycle must be between 0.0 and 1.0"));
+        if duty_cycle > 100 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Duty cycle must be between 0 and 100"));
         }
 
         let polarity: Polarity = polarity.into();
 
-        let pwm = Pwm::with_frequency(channel, frequency_hz, duty_cycle, polarity, true)
+        let pwm = Pwm::with_frequency(channel, frequency_hz, {duty_cycle / 100} as f64, polarity, true)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
 
         pwm_channels.insert(channel_num, Arc::new(Mutex::new(pwm)));
@@ -194,6 +194,8 @@ impl PWMManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num))]
     fn remove_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
+        self.stop_pwm_channel(channel_num)?;
+
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
 
         if pwm_channels.remove(&channel_num).is_some() {
@@ -207,11 +209,11 @@ impl PWMManager {
     ///
     /// Parameters:
     /// - `channel_num` (int): The PWM channel number (0 or 1).
-    /// - `duty_cycle` (float): The new duty cycle (0.0 to 1.0).
+    /// - `duty_cycle` (float): The new duty cycle (0 to 100).
     ///
     /// Example usage:
     /// ```python
-    /// pwm_manager.set_duty_cycle(0, 0.75)
+    /// pwm_manager.set_duty_cycle(0, 75)
     /// ```
     #[cfg(not(target_os = "linux"))]
     #[pyo3(signature = (channel_num, duty_cycle))]
@@ -221,16 +223,16 @@ impl PWMManager {
 
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num, duty_cycle))]
-    fn set_duty_cycle(&self, channel_num: u8, duty_cycle: f64) -> PyResult<()> {
-        if duty_cycle < 0.0 || duty_cycle > 1.0 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Duty cycle must be between 0.0 and 1.0"));
+    fn set_duty_cycle(&self, channel_num: u8, duty_cycle: u64) -> PyResult<()> {
+        if duty_cycle > 100 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Duty cycle must be between 0 and 100"));
         }
 
         let pwm_channels = self.pwm_channels.lock().unwrap();
 
         if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
             let pwm = pwm_arc.lock().unwrap();
-            pwm.set_duty_cycle(duty_cycle).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
+            pwm.set_duty_cycle({duty_cycle / 100} as f64).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
             Ok(())
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
@@ -309,7 +311,7 @@ impl PWMManager {
     /// - `channel_num` (int): The PWM channel number (0 or 1).
     ///
     /// Returns:
-    /// - `float`: The current duty cycle (0.0 to 1.0).
+    /// - `float`: The current duty cycle (0 to 100).
     ///
     /// Example usage:
     /// ```python
@@ -323,18 +325,69 @@ impl PWMManager {
 
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num))]
-    fn get_duty_cycle(&self, channel_num: u8) -> PyResult<f64> {
+    fn get_duty_cycle(&self, channel_num: u8) -> PyResult<u64> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
 
         if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
             let pwm = pwm_arc.lock().unwrap();
             if let Ok(duty_cycle) = pwm.duty_cycle() {
-                Ok(duty_cycle)
+                Ok(duty_cycle as u64 * 100u64)
             } else {
                 Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("Failed to get PWM duty cycle"))
             }
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
         }
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    #[pyo3(signature = (channel_num))]
+    fn reset(&self, channel_num: u8) -> PyResult<()> {
+        unimplemented!("This function is only available on Linux");
+    }
+
+    #[cfg(target_os = "linux")]
+    #[pyo3(signature = (channel_num))]
+    fn reset(&self, channel_num: u8) -> PyResult<()> {
+        let mut pwm_channels = self.pwm_channels.lock().unwrap();
+        let mut disabled = false;
+        let pin_exists = if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
+            let pwm = pwm_arc.lock().unwrap();
+            disabled = if let Ok(_) = pwm.disable() {
+                true
+            } else {
+                false
+            };
+            true
+        } else { false };
+
+        if pin_exists && disabled {
+            pwm_channels.remove(&channel_num);
+            Ok(())
+        } else if pin_exists {
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to reset PWM channel {}", channel_num)))
+        } else {
+            //
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("PWM channel {} not setup", channel_num)))
+        }
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    #[pyo3(signature = ())]
+    fn cleanup(&self) -> PyResult<()> {
+        unimplemented!("This function is only available on Linux");
+    }
+
+    #[cfg(target_os = "linux")]
+    #[pyo3(signature = ())]
+    fn cleanup(&self) -> PyResult<()> {
+        let mut pwm_channels = self.pwm_channels.lock().unwrap();
+        // Stop all PWM channels that are active
+        for (_, pwm_arc) in pwm_channels.iter() {
+            let pwm = pwm_arc.lock().unwrap();
+            pwm.disable().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
+        }
+        pwm_channels.clear();
+        Ok(())
     }
 }
