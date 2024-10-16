@@ -259,6 +259,4 @@ pip install --break-system-packages --upgrade gpio-manager
 
 - Support for UART
 - support for SPI
-- Support for hardware PWM
-- Support for I2C
-- Documentation on readthedocs.io
+- Documentation on readthedocs.org

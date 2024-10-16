@@ -250,4 +250,4 @@
 
 - Support for UART
 - support for SPI
-- Documentation on readthedocs.io
+- Documentation on readthedocs.org
