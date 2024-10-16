@@ -3,6 +3,7 @@ use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
 use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use rppal::pwm::{Pwm, Channel, Polarity};
+use crate::LogicLevel;
 
 #[pyclass(eq, eq_int)]
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -83,8 +84,8 @@ impl PWMManager {
     /// ```python
     /// pwm_manager.setup_pwm_channel(0, frequency_hz=1000.0, duty_cycle=0.5, polarity=pwm_manager.PWMPolarity.NORMAL)
     /// ```
-    #[pyo3(signature = (channel_num, frequency_hz = 60.0, duty_cycle = 0, polarity = PWMPolarity::NORMAL))]
-    fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: f64, duty_cycle: u64, polarity: PWMPolarity) -> PyResult<()> {
+    #[pyo3(signature = (channel_num, frequency_hz = 60.0, duty_cycle = 0, logic_level = LogicLevel::HIGH))]
+    fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: f64, duty_cycle: u64, logic_level: LogicLevel) -> PyResult<()> {
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
 
         if pwm_channels.contains_key(&channel_num) {
@@ -101,9 +102,12 @@ impl PWMManager {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Duty cycle must be between 0 and 100"));
         }
 
-        let polarity: Polarity = polarity.into();
+        let polarity = match logic_level {
+            LogicLevel::HIGH => Polarity::Normal,
+            LogicLevel::LOW => Polarity::Inverse,
+        };
 
-        let pwm = Pwm::with_frequency(channel, frequency_hz, {duty_cycle / 100} as f64, polarity, true)
+        let pwm = Pwm::with_frequency(channel, frequency_hz, { duty_cycle / 100 } as f64, polarity, false)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
 
         pwm_channels.insert(channel_num, Arc::new(Mutex::new(pwm)));
@@ -123,7 +127,6 @@ impl PWMManager {
     #[pyo3(signature = (channel_num))]
     fn start_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
-
         if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
             let pwm = pwm_arc.lock().unwrap();
             pwm.enable().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
@@ -145,7 +148,6 @@ impl PWMManager {
     #[pyo3(signature = (channel_num))]
     fn stop_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
-
         if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
             let pwm = pwm_arc.lock().unwrap();
             pwm.disable().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
@@ -165,7 +167,7 @@ impl PWMManager {
     /// pwm_manager.remove_pwm_channel(0)
     /// ```
     #[pyo3(signature = (channel_num))]
-    fn remove_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
+    fn reset_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
         self.stop_pwm_channel(channel_num)?;
 
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
@@ -194,10 +196,9 @@ impl PWMManager {
         }
 
         let pwm_channels = self.pwm_channels.lock().unwrap();
-
         if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
             let pwm = pwm_arc.lock().unwrap();
-            pwm.set_duty_cycle({duty_cycle / 100} as f64).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
+            pwm.set_duty_cycle({ duty_cycle / 100 } as f64).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
             Ok(())
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
@@ -217,7 +218,6 @@ impl PWMManager {
     #[pyo3(signature = (channel_num, frequency_hz))]
     fn set_frequency(&self, channel_num: u8, frequency_hz: f64) -> PyResult<()> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
-
         if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
             let pwm = pwm_arc.lock().unwrap();
             let current_duty_cycle = pwm.duty_cycle().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
@@ -284,38 +284,13 @@ impl PWMManager {
         }
     }
 
-    #[pyo3(signature = (channel_num))]
-    fn reset(&self, channel_num: u8) -> PyResult<()> {
-        let mut pwm_channels = self.pwm_channels.lock().unwrap();
-        let mut disabled = false;
-        let pin_exists = if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
-            let pwm = pwm_arc.lock().unwrap();
-            disabled = if let Ok(_) = pwm.disable() {
-                true
-            } else {
-                false
-            };
-            true
-        } else { false };
-
-        if pin_exists && disabled {
-            pwm_channels.remove(&channel_num);
-            Ok(())
-        } else if pin_exists {
-            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to reset PWM channel {}", channel_num)))
-        } else {
-            //
-            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("PWM channel {} not setup", channel_num)))
-        }
-    }
 
     #[pyo3(signature = ())]
     fn cleanup(&self) -> PyResult<()> {
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
         // Stop all PWM channels that are active
-        for (_, pwm_arc) in pwm_channels.iter() {
-            let pwm = pwm_arc.lock().unwrap();
-            pwm.disable().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
+        for (pin_num, _) in pwm_channels.iter() {
+            self.reset_pwm_channel(*pin_num)?
         }
         pwm_channels.clear();
         Ok(())

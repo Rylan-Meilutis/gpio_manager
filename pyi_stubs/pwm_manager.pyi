@@ -5,14 +5,14 @@ class PWMManager:
         """Initializes a new PWMManager instance."""
         ...
 
-    def setup_pwm_channel(self, channel_num: int, frequency_hz: float = 60.0, duty_cycle: int = 00, polarity: 'PWMPolarity' = 'PWMPolarity.NORMAL') -> None:
+    def setup_pwm_channel(self, channel_num: int, frequency_hz: float = 60.0, duty_cycle: int = 00, logic_level: 'LogicLevel' = LogicLevel.HIGH) -> None:
         """
         Sets up a PWM channel with the specified parameters.
 
         :param channel_num: The PWM channel number (0 or 1).
         :param frequency_hz: The frequency in Hertz.
         :param duty_cycle: The duty cycle (0 to 100).
-        :param polarity: The polarity of the PWM signal (set using PWMPolarity.[NORMAL or INVERSE]).
+        :param logic_level: The Logic level of the PWM signal (set using LogicLevel.[NORMAL or INVERSE]).
         """
         ...
 
@@ -32,9 +32,9 @@ class PWMManager:
         """
         ...
 
-    def remove_pwm_channel(self, channel_num: int) -> None:
+    def reset_pwm_channel(self, channel_num: int) -> None:
         """
-        Removes the PWM channel from the manager.
+        resets the PWM channel and removes it from the manager.
 
         :param channel_num: The PWM channel number (0 or 1).
         """
@@ -75,11 +75,6 @@ class PWMManager:
         :return: The current duty cycle (0 to 100).
         """
         ...
-
-    def reset(self, channel_num) -> None:
-        """
-        :param channel_num: The PWM channel number (0 or 1).
-        """
 
     def cleanup(self) -> None:
         """

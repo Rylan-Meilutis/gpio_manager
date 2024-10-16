@@ -23,7 +23,7 @@ static GPIO_MANAGER: Lazy<Arc<Mutex<GPIOManager>>> = Lazy::new(|| {
 ///
 /// ```manager = gpio_manager.GPIOManager()```
 ///
-/// ```manager.add_input_pin(18, gpio_manager.IPinState.PULLUP))```
+/// ```manager.add_input_pin(18, gpio_manager.IPinState.PULLUP)```
 ///
 /// ```manager.assign_callback(18, gpio_manager.TriggerEdge.FALLING, button_callback)```
 ///
@@ -70,7 +70,6 @@ impl GPIOManager {
         manager.async_interrupts.get(&pin_num).is_some()
     }
 
-    #[cfg(target_os = "linux")]
     fn set_pwm(&self, pwm_pin: u8) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
         if let Some(pwm_config) = manager.pwm_setup.get(&pwm_pin) {
@@ -188,13 +187,13 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.assign_callback(18, gpio_manager.TriggerEdge.FALLING, button_callback)```
     ///
-    #[pyo3(signature = (pin_num, trigger_edge, callback, args = None, debounce_time_ms = 2))]
+    #[pyo3(signature = (pin_num, callback, trigger_edge = TriggerEdge::BOTH, args = None, debounce_time_ms = 2))]
     fn assign_callback(
         &self,
         py: Python,
         pin_num: u8,
-        trigger_edge: TriggerEdge,
         callback: PyObject,
+        trigger_edge: TriggerEdge,
         args: Option<&Bound<'_, PyTuple>>, // Using Option to allow args to be None
         debounce_time_ms: u64,
     ) -> PyResult<()> {
@@ -261,7 +260,6 @@ impl GPIOManager {
             manager.callbacks.get(&pin_num).unwrap().clone_ref(py)
         });
 
-        // Use rppal's async interrupt handler without spawning a thread
         let mut pin = pin_arc.lock().unwrap();
         pin.set_async_interrupt(trigger, Some(Duration::from_millis(debounce_time_ms)), move |_event| {
             // Re-acquire the GIL for calling the Python callback
@@ -384,7 +382,6 @@ impl GPIOManager {
         }
     }
 
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, frequency_hz = 60))]
     fn set_pwm_frequency(&self, pin_num: u8, frequency_hz: u64) -> PyResult<()> {
         let mut manager = self.gpio.lock().unwrap();
