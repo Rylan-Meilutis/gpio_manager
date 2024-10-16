@@ -13,7 +13,10 @@
 - Support for event driven io using callbacks
 - Supports software pwm
 - Allows for setting up pins as input or output
-- Works with multiple platforms
+- Supports hardware PWM
+- Supports I2C
+- Works with multiple pi versions and multiple OS's
+
 
 ## Usage
 ### GPIO

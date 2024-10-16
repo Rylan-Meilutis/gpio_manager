@@ -246,6 +246,11 @@ pip install --break-system-packages --upgrade gpio-manager
 
 - Able to make multiple objects that can call the gpio without generating errors
 - Support for event driven io using callbacks
+- Supports software pwm
+- Allows for setting up pins as input or output
+- Supports hardware PWM
+- Supports I2C
+- Works with multiple pi versions and multiple OS's
 
 ## Warranty
 
