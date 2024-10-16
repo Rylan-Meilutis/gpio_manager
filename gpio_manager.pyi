@@ -5,12 +5,13 @@ class GPIOManager:
         """Initializes a new GPIOManager instance."""
         ...
 
-    def add_input_pin(self, pin_num: int, pin_state: IPinState = IPinState.NONE) -> None:
+    def add_input_pin(self, pin_num: int, pull_resistor_state: InternPullResistorState = InternPullResistorState.AUTO, logic_level: LogicLevel = LogicLevel.HIGH) -> None:
         """
         Sets up an input pin but does not assign a callback yet.
 
         :param pin_num: The GPIO pin to configure as input.
-        :param pin_state: The pin state (set it by using gpio_manager.IPinState.[PULLUP, PULLDOWN, or NONE]).
+        :param pull_resistor_state: The pin state (set it by using gpio_manager.InternPullResistorState.[PULLUP, PULLDOWN, EXTERNAL, or AUTO]).
+        :param logic_level: The logic level of the pin (set it by using gpio_manager.LogicLevel.[HIGH or LOW]).
         """
         ...
 
@@ -128,24 +129,216 @@ class GPIOManager:
         """
         ...
 
-class IPinState:
+
+class PWMManager:
+    """PWMManager provides methods to manage PWM channels."""
+
+    def __init__(self) -> None:
+        """Initializes a new PWMManager instance."""
+        ...
+
+    def setup_pwm_channel(self, channel_num: int, frequency_hz: float = 60.0, duty_cycle: float = 0.5, polarity: 'PWMPolarity' = 'PWMPolarity.NORMAL') -> None:
+        """
+        Sets up a PWM channel with the specified parameters.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        :param frequency_hz: The frequency in Hertz.
+        :param duty_cycle: The duty cycle (0.0 to 1.0).
+        :param polarity: The polarity of the PWM signal (set using PWMPolarity.[NORMAL or INVERSE]).
+        """
+        ...
+
+    def start_pwm_channel(self, channel_num: int) -> None:
+        """
+        Starts the PWM signal on the specified channel.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        """
+        ...
+
+    def stop_pwm_channel(self, channel_num: int) -> None:
+        """
+        Stops the PWM signal on the specified channel.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        """
+        ...
+
+    def remove_pwm_channel(self, channel_num: int) -> None:
+        """
+        Removes the PWM channel from the manager.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        """
+        ...
+
+    def set_duty_cycle(self, channel_num: int, duty_cycle: float) -> None:
+        """
+        Sets the duty cycle for the specified PWM channel.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        :param duty_cycle: The new duty cycle (0.0 to 1.0).
+        """
+        ...
+
+    def set_frequency(self, channel_num: int, frequency_hz: float) -> None:
+        """
+        Sets the frequency for the specified PWM channel.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        :param frequency_hz: The new frequency in Hertz.
+        """
+        ...
+
+    def get_frequency(self, channel_num: int) -> float:
+        """
+        Gets the current frequency of the specified PWM channel.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        :return: The current frequency in Hertz.
+        """
+        ...
+
+    def get_duty_cycle(self, channel_num: int) -> float:
+        """
+        Gets the current duty cycle of the specified PWM channel.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        :return: The current duty cycle (0.0 to 1.0).
+        """
+        ...
+class I2CManager:
+    """I2CManager provides methods to manage I2C communication."""
+
+    def __init__(self) -> None:
+        """Initializes a new I2CManager instance."""
+        ...
+
+    def open(self, bus: int = 1) -> None:
+        """
+        Opens the I2C bus.
+
+        :param bus: The I2C bus number to open (default is 1).
+        """
+        ...
+
+    def close(self) -> None:
+        """
+        Closes the I2C bus.
+        """
+        ...
+
+    def write_byte(self, addr: int, command: int, data: int) -> None:
+        """
+        Writes a single byte to the I2C slave device.
+
+        :param addr: The I2C slave address.
+        :param command: The command to send.
+        :param data: The byte to write.
+        """
+        ...
+
+    def read_byte(self, addr: int, command: int) -> int:
+        """
+        Reads a single byte from the I2C slave device.
+
+        :param addr: The I2C slave address.
+        :param command: The command to send before reading.
+        :return: The byte read.
+        """
+        ...
+
+    def write(self, addr: int, command: int, data: bytes) -> None:
+        """
+        Writes data to the I2C slave device.
+
+        :param addr: The I2C slave address.
+        :param command: The command to send.
+        :param data: The bytes to write.
+        """
+        ...
+
+    def read(self, addr: int, command: int, length: int) -> bytes:
+        """
+        Reads data from the I2C slave device.
+
+        :param addr: The I2C slave address.
+        :param command: The command to send before reading.
+        :param length: The number of bytes to read.
+        :return: The bytes read.
+        """
+        ...
+
+    def write_read(self, addr: int, command: int, write_data: bytes, read_length: int) -> bytes:
+        """
+        Performs a write followed by a read operation.
+
+        :param addr: The I2C slave address.
+        :param command: The command to send.
+        :param write_data: The bytes to write.
+        :param read_length: The number of bytes to read.
+        :return: The bytes read.
+        """
+        ...
+
+
+class PWMPolarity:
+    """Enum representing the PWM polarity options."""
+    NORMAL: 'PWMPolarity'
+    """
+    Normal polarity (default).
+    """
+    INVERSE: 'PWMPolarity'
+    """
+    Inverse polarity.
+    """
+
+class InternPullResistorState:
     """Enum representing the GPIO pin state types for input pins."""
-    PULLUP: 'IPinState'
-    PULLDOWN: 'IPinState'
-    NONE: 'IPinState'
+    PULLUP: 'InternPullResistorState'
+    """
+    Pulls the pin up to VCC.
+    """
+    PULLDOWN: 'InternPullResistorState'
+    """
+    Pulls the pin down to ground.
+    """
+    EXTERNAL: 'InternPullResistorState'
+    """
+    Don't use the internal pull resistor.
+    """
+    AUTO: 'InternPullResistorState'
+    """
+    Automatically picks the pull resistor based on the pin logic level.
+    """
 
 class OPinState:
-    """Enum representing the GPIO pin state types for output pins."""
+    """Enum representing the GPIO pin state types for output pins. The state represents the logic state of the pin. The voltage will be set based on the logic level."""
     HIGH: 'OPinState'
+    """
+    Sets the pin to Logic HIGH.
+    """
     LOW: 'OPinState'
+    """
+    Sets the pin to Logic LOW.
+    """
 
 class LogicLevel:
-    """Enum representing the logic levels of output pins."""
+    """Enum representing the logic levels of the pins."""
     HIGH: 'LogicLevel'
     LOW: 'LogicLevel'
 
 class TriggerEdge:
-    """Enum representing the trigger edge types."""
+    """Enum representing the trigger edge types. Triggers are based off logic level changes"""
     RISING: 'TriggerEdge'
+    """
+    Trigger on the rising edge. (from Logic LOW to Logic HIGH)
+    """
     FALLING: 'TriggerEdge'
+    """
+    Trigger on the falling edge. (from Logic HIGH to Logic LOW)
+    """
     BOTH: 'TriggerEdge'
+    """
+    Trigger on both edges.
+    """
