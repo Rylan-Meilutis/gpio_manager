@@ -12,43 +12,43 @@ pip install --break-system-packages --upgrade gpio-manager
 - To use, you first need to create a `GPIOManager` object, which can be done by calling:
 
   ```python
-  manager = gpio_manager.GPIOManager()
+  GPIO_manager = gpio_manager.GPIOManager()
   ```
 
 - To set up a pin as input with the pull-up resistor enabled on the pin:
 
   ```python
-  manager.add_input_pin(BUTTON_PIN, gpio_manager.InternPullResistorState.AUTO, gpio_manager.LogicLevel.HIGH)
+  GPIO_manager.add_input_pin(BUTTON_PIN, gpio_manager.InternPullResistorState.AUTO, gpio_manager.LogicLevel.HIGH)
   ```
 
 - To set up a pin as an output pin, run:
 
   ```python
-  manager.add_output_pin(LED_PIN)
+  GPIO_manager.add_output_pin(LED_PIN)
   ```
 
 - To set an output pin to the low state, run:
 
   ```python
-  manager.set_output_pin(LED_PIN, gpio_manager.OPinState.LOW)
+  GPIO_manager.set_output_pin(LED_PIN, gpio_manager.OPinState.LOW)
   ```
 
 - To assign a callback to an input pin for a falling edge trigger:
 
   ```python
-  manager.assign_callback(BUTTON_PIN, button_callback, gpio_manager.TriggerEdge.FALLING)
+  GPIO_manager.assign_callback(BUTTON_PIN, button_callback, gpio_manager.TriggerEdge.FALLING)
   ```
 
 - To wait for an edge on an input pin:
 
   ```python
-  manager.wait_for_edge(BUTTON_PIN, gpio_manager.TriggerEdge.FALLING)
+  GPIO_manager.wait_for_edge(BUTTON_PIN, gpio_manager.TriggerEdge.FALLING)
   ```
 
 - To set up PWM on an output pin:
 
   ```python
-  manager.setup_pwm(PWM_PIN, FREQUENCY, PULSE_WIDTH, gpio_manager.LogicLevel.HIGH)
+  GPIO_manager.setup_pwm(PWM_PIN, FREQUENCY, PULSE_WIDTH, gpio_manager.LogicLevel.HIGH)
   ```
 
   **Note**: If the pin is already set up as an output, the values for the logic level and current state will be preserved.
@@ -57,37 +57,37 @@ pip install --break-system-packages --upgrade gpio-manager
 - To set the duty cycle of a PWM pin:
 
   ```python
-  manager.set_pwm_duty_cycle(PWM_PIN, DUTY_CYCLE)
+  GPIO_manager.set_pwm_duty_cycle(PWM_PIN, DUTY_CYCLE)
   ```
 
 - To set the frequency of a PWM pin:
 
   ```python
-  manager.set_pwm_frequency(PWM_PIN, FREQUENCY)
+  GPIO_manager.set_pwm_frequency(PWM_PIN, FREQUENCY)
   ```
 
 - To start the PWM:
 
   ```python
-  manager.start_pwm(PWM_PIN)
+  GPIO_manager.start_pwm(PWM_PIN)
   ```
 
 - To stop the PWM:
 
   ```python
-  manager.stop_pwm(PWM_PIN)
+  GPIO_manager.stop_pwm(PWM_PIN)
   ```
 
 - To reset a pin to its default state:
 
   ```python
-  manager.reset_pin(PIN)
+  GPIO_manager.reset_pin(PIN)
   ```
 
 - To set all output pins to low and clear all interrupts:
 
   ```python
-  manager.cleanup()
+  GPIO_manager.cleanup()
   ```
 ---
 
@@ -102,7 +102,7 @@ pip install --break-system-packages --upgrade gpio-manager
 - To set up a PWM channel:
 
   ```python
-  pwm_manager.setup_pwm_channel(CHANNEL_NUM, frequency_hz=1000.0, duty_cycle=0, logic_level=gpio_manager.LogicLevel.NORMAL)
+  pwm_manager.setup_pwm_channel(CHANNEL_NUM, frequency_hz=60.0, duty_cycle=0, logic_level=gpio_manager.LogicLevel.NORMAL)
   ```
 
   - `CHANNEL_NUM`: The PWM channel number (either 0 or 1).
@@ -122,10 +122,10 @@ pip install --break-system-packages --upgrade gpio-manager
   pwm_manager.stop_pwm_channel(CHANNEL_NUM)
   ```
 
-- To remove a PWM channel:
+- To reset a PWM channel:
 
   ```python
-  pwm_manager.remove_pwm_channel(CHANNEL_NUM)
+  pwm_manager.reset_pwm_channel(CHANNEL_NUM)
   ```
 
 - To set the duty cycle for a PWM channel:
@@ -140,7 +140,7 @@ pip install --break-system-packages --upgrade gpio-manager
 - To set the frequency for a PWM channel:
 
   ```python
-  pwm_manager.set_frequency(CHANNEL_NUM, frequency_hz=500.0)
+  pwm_manager.set_frequency(CHANNEL_NUM, frequency_hz=60.0)
   ```
 
   - `CHANNEL_NUM`: The PWM channel number (either 0 or 1).
@@ -156,6 +156,11 @@ pip install --break-system-packages --upgrade gpio-manager
 
   ```python
   duty_cycle = pwm_manager.get_duty_cycle(CHANNEL_NUM)
+  ```
+
+- To cleanup the pwm channels:
+  ```python
+  duty_cycle = pwm_manager.cleanup()
   ```
 ---
 

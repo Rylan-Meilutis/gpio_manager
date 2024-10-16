@@ -5,7 +5,7 @@ class PWMManager:
         """Initializes a new PWMManager instance."""
         ...
 
-    def setup_pwm_channel(self, channel_num: int, frequency_hz: float = 60.0, duty_cycle: int = 00, logic_level: 'LogicLevel' = LogicLevel.HIGH) -> None:
+    def setup_pwm_channel(self, channel_num: int, frequency_hz: float = 60.0, duty_cycle: int = 0, logic_level: 'LogicLevel' = LogicLevel.HIGH) -> None:
         """
         Sets up a PWM channel with the specified parameters.
 

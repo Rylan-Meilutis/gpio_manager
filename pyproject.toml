@@ -1,14 +1,13 @@
 [project]
 name = "gpio_manager"
-version = "2.0.6"
+version = "2.0.7"
 description = "Rust bindings for the rppal crate to manage GPIO pins on a Raspberry Pi."
 readme = "info.md"
 requires-python = ">=3.8"
 license = { file = "LICENSE" }
 keywords = ["Raspberry PI 5", "Raspberry PI 4", "GPIO"]
 authors = [
-    { name = "Rylan Meilutis" },
-    { email = "rylan.meilutis@gmail.com" }
+    {name = "Rylan Meilutis", email = "rylan.meilutis@gmail.com"} ,
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
