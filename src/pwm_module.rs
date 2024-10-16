@@ -107,7 +107,7 @@ impl PWMManager {
             LogicLevel::LOW => Polarity::Inverse,
         };
 
-        let pwm = Pwm::with_frequency(channel, frequency_hz, { duty_cycle / 100 } as f64, polarity, false)
+        let pwm = Pwm::with_frequency(channel, frequency_hz, duty_cycle as f64 / 100f64 , polarity, false)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
 
         pwm_channels.insert(channel_num, Arc::new(Mutex::new(pwm)));
@@ -168,10 +168,10 @@ impl PWMManager {
     /// ```
     #[pyo3(signature = (channel_num))]
     fn reset_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
+        // self.set_duty_cycle(channel_num, 0)?;
         self.stop_pwm_channel(channel_num)?;
 
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
-
         if pwm_channels.remove(&channel_num).is_some() {
             Ok(())
         } else {
@@ -198,7 +198,8 @@ impl PWMManager {
         let pwm_channels = self.pwm_channels.lock().unwrap();
         if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
             let pwm = pwm_arc.lock().unwrap();
-            pwm.set_duty_cycle({ duty_cycle / 100 } as f64).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
+
+            pwm.set_duty_cycle( duty_cycle as f64 / 100f64 ).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
             Ok(())
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
@@ -287,11 +288,16 @@ impl PWMManager {
 
     #[pyo3(signature = ())]
     fn cleanup(&self) -> PyResult<()> {
-        let mut pwm_channels = self.pwm_channels.lock().unwrap();
+        let pwm_channels = self.pwm_channels.lock().unwrap();
+        let channel_nums: Vec<u8> = pwm_channels.keys().cloned().collect();
+        drop(pwm_channels);
+
         // Stop all PWM channels that are active
-        for (pin_num, _) in pwm_channels.iter() {
-            self.reset_pwm_channel(*pin_num)?
+        for pin_num in channel_nums {
+            self.reset_pwm_channel(pin_num)?;
         }
+
+        let mut pwm_channels = self.pwm_channels.lock().unwrap();
         pwm_channels.clear();
         Ok(())
     }
