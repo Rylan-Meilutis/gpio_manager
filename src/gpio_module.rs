@@ -30,8 +30,6 @@ static GPIO_MANAGER: Lazy<Arc<Mutex<GPIOManager>>> = Lazy::new(|| {
 /// ```manager.set_output_pin(25, gpio_manager.OPinState.HIGH)```
 ///
 pub struct GPIOManager {
-    #[cfg(target_os = "linux")]
-
     gpio: Arc<Mutex<PinManager>>,
 }
 
@@ -39,10 +37,6 @@ pub struct GPIOManager {
 impl GPIOManager {
     /// Internal method to initialize the GPIOManager singleton.
     fn new_singleton() -> PyResult<Self> {
-        #[cfg(not(target_os = "linux"))]
-        unimplemented!("This function is only available on Linux");
-
-        #[cfg(target_os = "linux")]
         Ok(Self {
             gpio: Arc::new(Mutex::new(PinManager {
                 input_pins: HashMap::new(),
@@ -56,37 +50,22 @@ impl GPIOManager {
 
     fn shared(py: Python) -> PyResult<Py<GPIOManager>> {
         let manager = GPIO_MANAGER.lock().unwrap();
-        #[cfg(not(target_os = "linux"))]
-        unimplemented!("This function is only available on Linux");
 
-        #[cfg(target_os = "linux")]
         Py::new(py, GPIOManager {
             gpio: Arc::clone(&manager.gpio),
         })
     }
-    #[cfg(not(target_os = "linux"))]
-    fn is_input_pin(&self, pin_num: u8) -> bool {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
+
     fn is_input_pin(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
         manager.input_pins.get(&pin_num).is_some()
     }
-    #[cfg(not(target_os = "linux"))]
-    fn is_output_pin(&self, pin_num: u8) -> bool {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
+
     fn is_output_pin(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
         manager.output_pins.get(&pin_num).is_some()
     }
 
 
-    #[cfg(not(target_os = "linux"))]
-    fn is_callback_setup(&self, pin_num: u8) -> bool {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
+
     fn is_callback_setup(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
         manager.async_interrupts.get(&pin_num).is_some()
     }
@@ -154,13 +133,6 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.add_input_pin(18)```
     ///
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, pull_resistor_state = InternPullResistorState::AUTO, logic_level = LogicLevel::HIGH)
-    )]
-    fn add_input_pin(&self, pin_num: u8, pull_resistor_state: InternPullResistorState, logic_level: LogicLevel) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, pull_resistor_state = InternPullResistorState::AUTO, logic_level = LogicLevel::HIGH)
     )]
     fn add_input_pin(&self, pin_num: u8, pull_resistor_state: InternPullResistorState, logic_level: LogicLevel) -> PyResult<()> {
@@ -216,20 +188,6 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.assign_callback(18, gpio_manager.TriggerEdge.FALLING, button_callback)```
     ///
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, trigger_edge, callback, args = None, debounce_time_ms = 2))]
-    fn assign_callback(
-        &self,
-        py: Python,
-        pin_num: u8,
-        trigger_edge: TriggerEdge,
-        callback: PyObject,
-        args: Option<&Bound<'_, PyTuple>>, // Using Option to allow args to be None
-        debounce_time_ms: u64,
-    ) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, trigger_edge, callback, args = None, debounce_time_ms = 2))]
     fn assign_callback(
         &self,
@@ -331,12 +289,6 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.add_output_pin(25)```
     ///
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, pin_state = OPinState::LOW, logic_level = LogicLevel::HIGH))]
-    fn add_output_pin(&self, pin_num: u8, pin_state: OPinState, logic_level: LogicLevel) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, pin_state = OPinState::LOW, logic_level = LogicLevel::HIGH))]
     fn add_output_pin(&self, pin_num: u8, pin_state: OPinState, logic_level: LogicLevel) -> PyResult<()> {
         let mut manager = self.gpio.lock().unwrap();
@@ -379,13 +331,6 @@ impl GPIOManager {
     ///
     /// Example usage:
     /// ```manager.set_pwm(25, 20, 1200)```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0, logic_level = LogicLevel::HIGH)
-    )]
-    fn setup_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64, logic_level: LogicLevel) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, frequency_hz = 60, duty_cycle = 0, logic_level = LogicLevel::HIGH)
     )]
     fn setup_pwm(&self, pin_num: u8, frequency_hz: u64, duty_cycle: u64, logic_level: LogicLevel) -> PyResult<()> {
@@ -423,12 +368,6 @@ impl GPIOManager {
     }
 
 
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, duty_cycle = 0))]
-    fn set_pwm_duty_cycle(&self, pin_num: u8, duty_cycle: u64) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, duty_cycle = 0))]
     fn set_pwm_duty_cycle(&self, pin_num: u8, duty_cycle: u64) -> PyResult<()> {
         if duty_cycle > 100 {
@@ -445,11 +384,6 @@ impl GPIOManager {
         }
     }
 
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, frequency_hz = 60))]
-    fn set_pwm_frequency(&self, pin_num: u8, frequency_hz: u64) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, frequency_hz = 60))]
     fn set_pwm_frequency(&self, pin_num: u8, frequency_hz: u64) -> PyResult<()> {
@@ -465,12 +399,6 @@ impl GPIOManager {
     }
 
 
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num))]
-    fn start_pwm(&self, pin_num: u8) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num))]
     fn start_pwm(&self, pin_num: u8) -> PyResult<()> {
         let mut manager = self.gpio.lock().unwrap();
@@ -485,12 +413,7 @@ impl GPIOManager {
     }
 
 
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num))]
-    fn stop_pwm(&self, pin_num: u8) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
+
     #[pyo3(signature = (pin_num))]
     fn stop_pwm(&self, pin_num: u8) -> PyResult<()> {
         let mut manager = self.gpio.lock().unwrap();
@@ -513,12 +436,6 @@ impl GPIOManager {
     ///
     /// Example usage:
     /// ```manager.set_output_pin(25, True)```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, pin_state))]
-    fn set_output_pin(&self, pin_num: u8, pin_state: OPinState) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, pin_state))]
     fn set_output_pin(&self, pin_num: u8, pin_state: OPinState) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
@@ -565,12 +482,7 @@ impl GPIOManager {
     /// Example usage:
     /// ```state = manager.poll_pin(18)```
     ///
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num))]
-    fn get_pin(&self, pin_num: u8) -> PyResult<OPinState> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
+
     #[pyo3(signature = (pin_num))]
     fn get_pin(&self, pin_num: u8) -> PyResult<OPinState> {
         let manager = self.gpio.lock().unwrap();
@@ -612,12 +524,6 @@ impl GPIOManager {
     /// Example usage:
     /// ```state = manager.poll_pin(18)```
     ///
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num))]
-    fn unassign_callback(&self, pin_num: u8) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num))]
     fn unassign_callback(&self, pin_num: u8) -> PyResult<()> {
         let mut manager = self.gpio.lock().unwrap();
@@ -641,13 +547,6 @@ impl GPIOManager {
     }
 
     /// wait for an edge on the assigned pin
-    ///
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = -1))]
-    fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: i64) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = -1))]
     fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: i64) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
@@ -691,13 +590,6 @@ impl GPIOManager {
     }
 
     /// Reset the gpio_pin allowing it to be remapped to input or output
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (pin_num))]
-    fn reset_pin(&self, pin_num: u8) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num))]
     fn reset_pin(&self, pin_num: u8) -> PyResult<()> {
         // Lock the manager to start
@@ -752,12 +644,6 @@ impl GPIOManager {
     }
 
     /// Cleanup the GPIO pins by setting all outputs to low and clearing all interrupts
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = ())]
-    fn cleanup(&self) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = ())]
     fn cleanup(&self) -> PyResult<()> {
         // Lock the manager and collect the necessary data

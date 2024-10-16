@@ -4,12 +4,10 @@ mod i2c_module;
 
 use pyo3::prelude::*;
 use pyo3::PyObject;
-#[cfg(target_os = "linux")]
 use rppal::gpio::{InputPin, OutputPin};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-#[cfg(target_os = "linux")]
 struct PinManager {
     input_pins: HashMap<u8, Arc<Mutex<Pin>>>,
     output_pins: HashMap<u8, Arc<Mutex<Pin>>>,

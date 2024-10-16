@@ -10,7 +10,6 @@ license = "MIT"
 [dependencies]
 pyo3 = { version = "0.22.3", features = ["extension-module", "gil-refs"] }
 once_cell = "1.10"  # Add once_cell to manage the singleton
-[target.'cfg(target_os = "linux")'.dependencies]
 rppal = "0.19"
 
 [lib]

@@ -83,13 +83,6 @@ impl PWMManager {
     /// ```python
     /// pwm_manager.setup_pwm_channel(0, frequency_hz=1000.0, duty_cycle=0.5, polarity=pwm_manager.PWMPolarity.NORMAL)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (channel_num, frequency_hz = 60.0, duty_cycle = 0.5, polarity = PWMPolarity::NORMAL))]
-    fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: f64, duty_cycle: f64, polarity: PWMPolarity) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num, frequency_hz = 60.0, duty_cycle = 0, polarity = PWMPolarity::NORMAL))]
     fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: f64, duty_cycle: u64, polarity: PWMPolarity) -> PyResult<()> {
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
@@ -127,13 +120,6 @@ impl PWMManager {
     /// ```python
     /// pwm_manager.start_pwm_channel(0)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (channel_num))]
-    fn start_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num))]
     fn start_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
@@ -156,13 +142,6 @@ impl PWMManager {
     /// ```python
     /// pwm_manager.stop_pwm_channel(0)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (channel_num))]
-    fn stop_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num))]
     fn stop_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
@@ -185,13 +164,6 @@ impl PWMManager {
     /// ```python
     /// pwm_manager.remove_pwm_channel(0)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (channel_num))]
-    fn remove_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num))]
     fn remove_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
         self.stop_pwm_channel(channel_num)?;
@@ -215,13 +187,6 @@ impl PWMManager {
     /// ```python
     /// pwm_manager.set_duty_cycle(0, 75)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (channel_num, duty_cycle))]
-    fn set_duty_cycle(&self, channel_num: u8, duty_cycle: f64) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num, duty_cycle))]
     fn set_duty_cycle(&self, channel_num: u8, duty_cycle: u64) -> PyResult<()> {
         if duty_cycle > 100 {
@@ -249,13 +214,6 @@ impl PWMManager {
     /// ```python
     /// pwm_manager.set_frequency(0, 500.0)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (channel_num, frequency_hz))]
-    fn set_frequency(&self, channel_num: u8, frequency_hz: f64) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num, frequency_hz))]
     fn set_frequency(&self, channel_num: u8, frequency_hz: f64) -> PyResult<()> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
@@ -282,13 +240,6 @@ impl PWMManager {
     /// ```python
     /// frequency = pwm_manager.get_frequency(0)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (channel_num))]
-    fn get_frequency(&self, channel_num: u8) -> PyResult<f64> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num))]
     fn get_frequency(&self, channel_num: u8) -> PyResult<f64> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
@@ -317,13 +268,6 @@ impl PWMManager {
     /// ```python
     /// duty_cycle = pwm_manager.get_duty_cycle(0)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (channel_num))]
-    fn get_duty_cycle(&self, channel_num: u8) -> PyResult<f64> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num))]
     fn get_duty_cycle(&self, channel_num: u8) -> PyResult<u64> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
@@ -340,13 +284,6 @@ impl PWMManager {
         }
     }
 
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (channel_num))]
-    fn reset(&self, channel_num: u8) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num))]
     fn reset(&self, channel_num: u8) -> PyResult<()> {
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
@@ -372,13 +309,6 @@ impl PWMManager {
         }
     }
 
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = ())]
-    fn cleanup(&self) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = ())]
     fn cleanup(&self) -> PyResult<()> {
         let mut pwm_channels = self.pwm_channels.lock().unwrap();

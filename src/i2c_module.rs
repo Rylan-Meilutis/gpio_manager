@@ -63,13 +63,6 @@ impl I2CManager {
     /// ```python
     /// i2c_manager.open(bus=1)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (bus = 1))]
-    fn open(&self, bus: u8) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (bus = 1))]
     fn open(&self, bus: u8) -> PyResult<()> {
         let mut i2c_lock = self.i2c.lock().unwrap();
@@ -89,12 +82,6 @@ impl I2CManager {
     /// ```python
     /// i2c_manager.close()
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    fn close(&self) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     fn close(&self) -> PyResult<()> {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if i2c_lock.is_none() {
@@ -114,13 +101,6 @@ impl I2CManager {
     /// ```python
     /// i2c_manager.write_byte(0x20, 0xFF)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (addr, command, data))]
-    fn write_byte(&self, addr: u16, command: u8, data: u8) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (addr, command, data))]
     fn write_byte(&self, addr: u16, command: u8, data: u8) -> PyResult<()> {
         let mut i2c_lock = self.i2c.lock().unwrap();
@@ -149,13 +129,6 @@ impl I2CManager {
     /// ```python
     /// data = i2c_manager.read_byte(0x20)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (addr, command))]
-    fn read_byte(&self, addr: u16, command: u8) -> PyResult<u8> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (addr, command))]
     fn read_byte(&self, addr: u16, command: u8) -> PyResult<u8> {
         let mut i2c_lock = self.i2c.lock().unwrap();
@@ -181,13 +154,6 @@ impl I2CManager {
     /// ```python
     /// i2c_manager.write(0x20, b'\x01\x02\x03')
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (addr, command, data))]
-    fn write(&self, addr: u16, command: u8, data: &Bound<'_, PyBytes>) -> PyResult<()> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (addr, command, data))]
     fn write(&self, addr: u16, command: u8, data: &Bound<'_, PyBytes>) -> PyResult<()> {
         let mut i2c_lock = self.i2c.lock().unwrap();
@@ -215,13 +181,6 @@ impl I2CManager {
     /// ```python
     /// data = i2c_manager.read(0x20, 3)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (addr, command, length))]
-    fn read(&self, py: Python, addr: u16, command :u8, length: usize) -> PyResult<Bound<'_, PyBytes>> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (addr, command, length))]
     fn read<'py>(&self, py: Python<'py>, addr: u16, command: u8, length: usize) -> PyResult<Bound<'py, PyBytes>> {
         let mut i2c_lock = self.i2c.lock().unwrap();
@@ -253,13 +212,6 @@ impl I2CManager {
     /// ```python
     /// data = i2c_manager.write_read(0x20, b'\x01\x02', 3)
     /// ```
-    #[cfg(not(target_os = "linux"))]
-    #[pyo3(signature = (addr, command, write_data, read_length))]
-    fn write_read(&self, py: Python, addr: u16, command: u8, write_data: &Bound<'_, PyBytes>, read_length: usize) -> PyResult<Bound<'_, PyBytes>> {
-        unimplemented!("This function is only available on Linux");
-    }
-
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (addr, command, write_data, read_length))]
     fn write_read<'py>(&self, py: Python<'py>, addr: u16, command: u8, write_data: &Bound<'py, PyBytes>, read_length: usize) -> PyResult<Bound<'py, PyBytes>> {
         self.write(addr, command, write_data)?;
