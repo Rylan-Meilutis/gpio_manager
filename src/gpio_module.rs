@@ -70,7 +70,6 @@ impl GPIOManager {
         manager.async_interrupts.get(&pin_num).is_some()
     }
 
-    #[cfg(target_os = "linux")]
     fn set_pwm(&self, pwm_pin: u8) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
         if let Some(pwm_config) = manager.pwm_setup.get(&pwm_pin) {
@@ -384,7 +383,6 @@ impl GPIOManager {
         }
     }
 
-    #[cfg(target_os = "linux")]
     #[pyo3(signature = (pin_num, frequency_hz = 60))]
     fn set_pwm_frequency(&self, pin_num: u8, frequency_hz: u64) -> PyResult<()> {
         let mut manager = self.gpio.lock().unwrap();
