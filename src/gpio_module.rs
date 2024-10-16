@@ -187,13 +187,13 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.assign_callback(18, gpio_manager.TriggerEdge.FALLING, button_callback)```
     ///
-    #[pyo3(signature = (pin_num, trigger_edge, callback, args = None, debounce_time_ms = 2))]
+    #[pyo3(signature = (pin_num, callback, trigger_edge = TriggerEdge::BOTH, args = None, debounce_time_ms = 2))]
     fn assign_callback(
         &self,
         py: Python,
         pin_num: u8,
-        trigger_edge: TriggerEdge,
         callback: PyObject,
+        trigger_edge: TriggerEdge,
         args: Option<&Bound<'_, PyTuple>>, // Using Option to allow args to be None
         debounce_time_ms: u64,
     ) -> PyResult<()> {

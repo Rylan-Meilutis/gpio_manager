@@ -15,13 +15,13 @@ class GPIOManager:
         """
         ...
 
-    def assign_callback(self, pin_num: int, trigger_edge: TriggerEdge, callback: Callable, args: Optional[Tuple] = None, debounce_time_ms: int = 2) -> None:
+    def assign_callback(self, pin_num: int, callback: Callable, trigger_edge: TriggerEdge = TriggerEdge.BOTH, args: Optional[Tuple] = None, debounce_time_ms: int = 2) -> None:
         """
         Assigns a callback to an input pin.
 
         :param pin_num: The GPIO pin.
-        :param trigger_edge: The edge trigger type (set using gpio_manager.TriggerEdge.[RISING, FALLING, BOTH]).
         :param callback: The callback function to be invoked on pin change.
+        :param trigger_edge: The edge trigger type (set using gpio_manager.TriggerEdge.[RISING, FALLING, BOTH]).
         :param args: The arguments to pass to the callback function.
         :param debounce_time_ms: The debounce time in milliseconds.
         """
@@ -121,6 +121,7 @@ class GPIOManager:
         Resets the given pin so it can set to either input or output.
         :param pin_num: The GPIO pin.
         """
+
     ...
 
     def cleanup(self) -> None:

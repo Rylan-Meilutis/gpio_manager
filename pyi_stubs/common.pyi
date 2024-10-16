@@ -1,14 +1,3 @@
-class PWMPolarity:
-    """Enum representing the PWM polarity options."""
-    NORMAL: 'PWMPolarity'
-    """
-    Normal polarity (default).
-    """
-    INVERSE: 'PWMPolarity'
-    """
-    Inverse polarity.
-    """
-
 class InternPullResistorState:
     """Enum representing the GPIO pin state types for input pins."""
     PULLUP: 'InternPullResistorState'
@@ -25,7 +14,7 @@ class InternPullResistorState:
     """
     AUTO: 'InternPullResistorState'
     """
-    Automatically picks the pull resistor based on the pin logic level.
+    Automatically picks the pull resistor based on the pin logic level (Default).
     """
 
 class OPinState:
@@ -42,7 +31,13 @@ class OPinState:
 class LogicLevel:
     """Enum representing the logic levels of the pins."""
     HIGH: 'LogicLevel'
+    """
+    Logic high, when the voltage is close to VCC (Default).
+    """
     LOW: 'LogicLevel'
+    """
+    Logic high, when the voltage is close to ground.
+    """
 
 class TriggerEdge:
     """Enum representing the trigger edge types. Triggers are based off logic level changes"""
@@ -56,5 +51,5 @@ class TriggerEdge:
     """
     BOTH: 'TriggerEdge'
     """
-    Trigger on both edges.
+    Trigger on both edges (Default).
     """
