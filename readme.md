@@ -36,7 +36,7 @@ pip install --break-system-packages --upgrade gpio-manager
 - To assign a callback to an input pin for a falling edge trigger:
 
   ```python
-  manager.assign_callback(BUTTON_PIN, gpio_manager.TriggerEdge.FALLING, button_callback)
+  manager.assign_callback(BUTTON_PIN, button_callback, gpio_manager.TriggerEdge.FALLING)
   ```
 
 - To wait for an edge on an input pin:
@@ -102,13 +102,13 @@ pip install --break-system-packages --upgrade gpio-manager
 - To set up a PWM channel:
 
   ```python
-  pwm_manager.setup_pwm_channel(CHANNEL_NUM, frequency_hz=1000.0, duty_cycle=50, polarity=pwm_manager.PWMPolarity.NORMAL)
+  pwm_manager.setup_pwm_channel(CHANNEL_NUM, frequency_hz=1000.0, duty_cycle=0, logic_level=gpio_manager.LogicLevel.NORMAL)
   ```
 
   - `CHANNEL_NUM`: The PWM channel number (either 0 or 1).
   - `frequency_hz`: The frequency of the PWM signal in Hertz.
   - `duty_cycle`: The duty cycle of the PWM signal as a percentage (from 0 to 100).
-  - `polarity`: The polarity of the PWM signal (can be set to `PWMPolarity.NORMAL` or `PWMPolarity.INVERSE`).
+  - `logic_level`: The logic level of the PWM signal (can be set to `LogicLevel.HIGH` or `LogicLevel.LOW`).
 
 - To start the PWM signal on a specified channel:
 
