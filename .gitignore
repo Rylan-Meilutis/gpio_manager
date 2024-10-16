@@ -2,3 +2,4 @@ target/
 venv/
 .idea/
 .DS_Store
+gpio_manager.pyi

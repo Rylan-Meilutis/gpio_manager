@@ -194,6 +194,8 @@ impl PWMManager {
     #[cfg(target_os = "linux")]
     #[pyo3(signature = (channel_num))]
     fn remove_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
+        self.stop_pwm_channel(channel_num)?;
+
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
 
         if pwm_channels.remove(&channel_num).is_some() {
@@ -336,5 +338,24 @@ impl PWMManager {
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
         }
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    #[pyo3(signature = ())]
+    fn cleanup(&self) -> PyResult<()> {
+        unimplemented!("This function is only available on Linux");
+    }
+
+    #[cfg(target_os = "linux")]
+    #[pyo3(signature = ())]
+    fn cleanup(&self) -> PyResult<()> {
+        let mut pwm_channels = self.pwm_channels.lock().unwrap();
+        // Stop all PWM channels that are active
+        for (_, pwm_arc) in pwm_channels.iter() {
+            let pwm = pwm_arc.lock().unwrap();
+            pwm.disable().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
+        }
+        pwm_channels.clear();
+        Ok(())
     }
 }
