@@ -1,6 +1,6 @@
 [package]
 name = "gpio_manager"
-version = "2.0.1"
+version = "2.0.2"
 edition = "2021"
 include = ["src/**/*.rs", "Cargo.toml", "Cargo.lock", "README.md", "gpio_manager.pyi"]
 authors = ["Rylan Meilutis <rylan.meilutis@gmail.com>"]
@@ -10,7 +10,6 @@ license = "MIT"
 [dependencies]
 pyo3 = { version = "0.22.3", features = ["extension-module", "gil-refs"] }
 once_cell = "1.10"  # Add once_cell to manage the singleton
-[target.'cfg(target_os = "linux")'.dependencies]
 rppal = "0.19"
 
 [lib]
