@@ -3,7 +3,7 @@
 - These are rust binding around
   the [RPPAL - Raspberry Pi Peripheral Access Library](https://github.com/golemparts/rppal) crate that gives access to
   gpio, pwm, spi, and more.
-  As of current, the only provided bindings are for the gpio library.
+  As of current, the gpio and pwm portions are tested and working, i2c will be tested soon as well.
   Support for the other functions may come later on.
 - These bindings allow you to call the rust code from python in a way that looks like any other python object
 
