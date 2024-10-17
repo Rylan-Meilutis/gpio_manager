@@ -92,7 +92,7 @@ impl GPIOManager {
             let period = if pwm_config.frequency == 0 {
                 Duration::from_millis(0)
             } else {
-                Duration::from_millis(1000 / pwm_config.frequency)
+                Duration::from_secs_f64(1f64 / pwm_config.frequency as f64)
             };
             if pwm_config.duty_cycle > 100 {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", pwm_config.duty_cycle)));
