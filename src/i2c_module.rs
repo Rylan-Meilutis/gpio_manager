@@ -1,9 +1,9 @@
-use std::sync::{Arc, Mutex};
 use once_cell::sync::Lazy;
-use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use pyo3::prelude::*;
 use pyo3::types::PyBytes;
+use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use rppal::i2c::I2c;
+use std::sync::{Arc, Mutex};
 
 static I2C_MANAGER: Lazy<Arc<Mutex<I2CManager>>> = Lazy::new(|| {
     Arc::new(Mutex::new(I2CManager::new_singleton().expect("Failed to initialize I2CManager")))

@@ -1,9 +1,9 @@
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use crate::LogicLevel;
 use once_cell::sync::Lazy;
 use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
-use rppal::pwm::{Pwm, Channel, Polarity};
-use crate::LogicLevel;
+use rppal::pwm::{Channel, Polarity, Pwm};
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 #[pyclass(eq, eq_int)]
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -107,7 +107,7 @@ impl PWMManager {
             LogicLevel::LOW => Polarity::Inverse,
         };
 
-        let pwm = Pwm::with_frequency(channel, frequency_hz, duty_cycle as f64 / 100f64 , polarity, false)
+        let pwm = Pwm::with_frequency(channel, frequency_hz, duty_cycle as f64 / 100f64, polarity, false)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
 
         pwm_channels.insert(channel_num, Arc::new(Mutex::new(pwm)));
@@ -199,7 +199,7 @@ impl PWMManager {
         if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
             let pwm = pwm_arc.lock().unwrap();
 
-            pwm.set_duty_cycle( duty_cycle as f64 / 100f64 ).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
+            pwm.set_duty_cycle(duty_cycle as f64 / 100f64).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
             Ok(())
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))

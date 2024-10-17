@@ -1,13 +1,13 @@
+use crate::{InternPullResistorState, LogicLevel, OPinState, Pin, PinManager, PinType, PwmConfig, TriggerEdge};
+use once_cell::sync::Lazy;
+use pyo3::prelude::*;
+use pyo3::types::PyTuple;
+use pyo3::PyObject;
+use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
+use rppal::gpio::{Gpio, Trigger};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard};
 use std::time::Duration;
-use once_cell::sync::Lazy;
-use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
-use pyo3::prelude::*;
-use pyo3::PyObject;
-use pyo3::types::PyTuple;
-use crate::{InternPullResistorState, LogicLevel, PinManager, PinType, Pin, TriggerEdge, OPinState, PwmConfig};
-use rppal::gpio::{Gpio, Trigger};
 
 
 // Singleton instance of GPIOManager
@@ -63,7 +63,6 @@ impl GPIOManager {
     fn is_output_pin(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
         manager.output_pins.get(&pin_num).is_some()
     }
-
 
 
     fn is_callback_setup(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
@@ -408,7 +407,6 @@ impl GPIOManager {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (pin is either input or not setup)"))
         }
     }
-
 
 
     #[pyo3(signature = (pin_num))]
