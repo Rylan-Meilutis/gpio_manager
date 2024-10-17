@@ -398,7 +398,7 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num))]
     fn start_pwm(&self, pin_num: u8) -> PyResult<()> {
         let mut manager = self.gpio.lock().unwrap();
-        if let Some(_) = manager.output_pins.get(&pin_num) {
+        if let Some(_) = manager.pwm_setup.get(&pin_num) {
             manager.pwm_setup.get_mut(&pin_num).unwrap().is_active = true;
             drop(manager);
             self.set_pwm(pin_num)?;
@@ -412,7 +412,7 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num))]
     fn stop_pwm(&self, pin_num: u8) -> PyResult<()> {
         let mut manager = self.gpio.lock().unwrap();
-        if let Some(_) = manager.output_pins.get(&pin_num) {
+        if let Some(_) = manager.pwm_setup.get(&pin_num) {
             manager.pwm_setup.get_mut(&pin_num).unwrap().is_active = false;
             drop(manager);
             self.set_pwm(pin_num)?;
@@ -621,16 +621,15 @@ impl GPIOManager {
                 manager.pwm_setup.remove(&pin_num);
             } else {
                 let pin = &pin_arc.pin;
-                if let PinType::Output(out_pin) = pin {
-                    let mut pin = out_pin.lock().unwrap();
-                    pin.set_low();
-                    drop(pin);
+                if let PinType::Output(_) = pin {
+                    drop(pin_arc);
+                    self.set_output_pin(pin_num, OPinState::LOW)?;
                 } else {
                     return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (Something really bad happened to get to this point)"));
                 }
             }
 
-            // Re-lock manager to remove the output pin
+           // Re-lock manager to remove the output pin
             let mut manager = self.gpio.lock().unwrap();
             manager.output_pins.remove(&pin_num);
         }
