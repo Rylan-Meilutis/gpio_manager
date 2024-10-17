@@ -328,9 +328,6 @@ impl GPIOManager {
         if duty_cycle > 100 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle)));
         }
-        if frequency_hz > 1000 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Frequency must be between 0 and 1000"));
-        }
         let mut manager = self.gpio.lock().unwrap();
         if self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin)"));
@@ -380,9 +377,6 @@ impl GPIOManager {
 
     #[pyo3(signature = (pin_num, frequency_hz = 60))]
     fn set_pwm_frequency(&self, pin_num: u8, frequency_hz: u64) -> PyResult<()> {
-        if frequency_hz > 1000 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Frequency must be between 0 and 1000"));
-        }
         let mut manager = self.gpio.lock().unwrap();
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
             manager.pwm_setup.get_mut(&pin_num).unwrap().frequency = frequency_hz;
