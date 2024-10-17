@@ -89,20 +89,14 @@ impl GPIOManager {
                 }
                 return Ok(());
             }
-            let period = if pwm_config.frequency == 0 {
-                Duration::from_millis(0)
+            let duty_cycle = if pwm_config.logic_level == LogicLevel::LOW
+            {
+                100 - pwm_config.duty_cycle
             } else {
-                Duration::from_micros(1_000_000 / pwm_config.frequency)
+                pwm_config.duty_cycle
             };
-            if pwm_config.duty_cycle > 100 {
-                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", pwm_config.duty_cycle)));
-            }
-            let pulse_width = if pwm_config.logic_level == LogicLevel::LOW {
-                Duration::from_micros((period.as_micros() as f64 * ((100f64 - pwm_config.duty_cycle as f64) / 100.0)) as u64)
-            } else {
-                Duration::from_micros((period.as_micros() as f64 * (pwm_config.duty_cycle as f64 / 100.0)) as u64)
-            };
-            pin.set_pwm(period, pulse_width).expect("Failed to set pwm");
+
+            pin.set_pwm_frequency(pwm_config.frequency as f64, duty_cycle as f64 / 100f64).expect("Failed to set pwm frequency");
             Ok(())
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not setup for pwm"))
