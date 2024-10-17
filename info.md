@@ -3,7 +3,7 @@
 - These are rust binding around
   the [RPPAL - Raspberry Pi Peripheral Access Library](https://github.com/golemparts/rppal) crate that gives access to
   gpio, pwm, spi, and more.
-  As of current, the gpio and pwm portions are tested and working, i2c will be tested soon as well.
+  As of current, the gpio, i2c, and pwm portions are tested and working.
   Support for the other functions may come later on.
 - These bindings allow you to call the rust code from python in a way that looks like any other python object
 
@@ -178,29 +178,40 @@
 
 ### I2C
 
-- To use I2C functionality, you first need to create an `I2CManager` object:
+- To use I2C functionality, first create an `I2CManager` object:
 
   ```python
   i2c_manager = gpio_manager.I2CManager()
   ```
-
 - To open the I2C bus:
-
+  
   ```python
-   i2c_manager.open(bus=1)
-   ```
+  i2c_manager.open(bus=1)
+  ```
+
   - `bus`: The I2C bus number to open (default is 1).
 
 - To close the I2C bus:
-
+  
   ```python
-   i2c_manager.close()
-   ```
+  i2c_manager.close()
+  ```
+  
 - To write a single byte to an I2C slave device:
 
   ```python
-   i2c_manager.write_byte(0x20, 0x01, 0xFF)
-   ```
+  i2c_manager.write_byte(0x20, 0xFF)
+  ```
+  
+  - `0x20`: The I2C slave address.
+  - `0xFF`: The byte to write.
+
+- To write a single byte with a command to an I2C slave device:
+  
+  ```python
+  i2c_manager.block_write_byte(0x20, 0x01, 0xFF)
+  ```
+  
   - `0x20`: The I2C slave address.
   - `0x01`: The command to send to the slave device.
   - `0xFF`: The byte to write.
@@ -208,36 +219,77 @@
 - To read a single byte from an I2C slave device:
 
   ```python
-   data = i2c_manager.read_byte(0x20, 0x01)
-   ```
+  data = i2c_manager.read_byte(0x20)
+  ```
+  
+  - `0x20`: The I2C slave address.
+  - `data`: The byte read.
+
+- To read a single byte with a command from an I2C slave device:
+  
+  ```python
+  data = i2c_manager.block_read_byte(0x20, 0x01)
+  ```
+  
   - `0x20`: The I2C slave address.
   - `0x01`: The command to send to the slave device before reading.
   - `data`: The byte read.
 
 - To write data to an I2C slave device:
-
+  
   ```python
-   i2c_manager.write(0x20, 0x01, b'\x01\x02\x03')
-   ```
+  i2c_manager.write(0x20, b'\x01\x02\x03')
+  ```
+  - `0x20`: The I2C slave address.
+  - `b'\x01\x02\x03'`: The bytes to write.
+
+- To write data with a command to an I2C slave device:
+  
+- ```python
+  i2c_manager.block_write(0x20, 0x01, b'\x01\x02\x03')
+  ```
+  
   - `0x20`: The I2C slave address.
   - `0x01`: The command to send to the slave device.
   - `b'\x01\x02\x03'`: The bytes to write.
 
 - To read data from an I2C slave device:
+  ```python
+
+  data = i2c_manager.read(0x20, 3)
+  ```
+  - `0x20`: The I2C slave address.
+  - `3`: The number of bytes to read.
+  - `data`: The bytes read.
+
+- To read data with a command from an I2C slave device:
 
   ```python
-   data = i2c_manager.read(0x20, 0x01, 3)
+  data = i2c_manager.block_read(0x20, 0x01, 3)
   ```
+
   - `0x20`: The I2C slave address.
   - `0x01`: The command to send to the slave device before reading.
   - `3`: The number of bytes to read.
   - `data`: The bytes read.
 
 - To perform a write followed by a read operation:
+- 
+  ```python
+  data = i2c_manager.write_read(0x20, b'\x01\x02', 3)
+  ```
+  
+  - `0x20`: The I2C slave address.
+  - `b'\x01\x02'`: The bytes to write.
+  - `3`: The number of bytes to read.
+  - `data`: The bytes read.
 
-   ```python
-   data = i2c_manager.write_read(0x20, 0x01, b'\x01\x02', 3)
-   ```
+- To perform a block write followed by a block read operation:
+- 
+  ```python
+  data = i2c_manager.block_write_read(0x20, 0x01, b'\x01\x02', 3)
+  ```
+  
   - `0x20`: The I2C slave address.
   - `0x01`: The command to send to the slave device.
   - `b'\x01\x02'`: The bytes to write.
