@@ -30,7 +30,7 @@ pip install --break-system-packages --upgrade gpio-manager
 - To set an output pin to the low state, run:
 
   ```python
-  GPIO_manager.set_output_pin(LED_PIN, gpio_manager.OPinState.LOW)
+  GPIO_manager.set_output_pin(LED_PIN, gpio_manager.PinState.LOW)
   ```
 
 - To assign a callback to an input pin for a falling edge trigger:
