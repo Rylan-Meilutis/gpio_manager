@@ -17,6 +17,7 @@ class InternPullResistorState:
     Automatically picks the pull resistor based on the pin logic level (Default).
     """
 
+
 class OPinState:
     """Enum representing the GPIO pin state types for output pins. The state represents the logic state of the pin. The voltage will be set based on the logic level."""
     HIGH: 'OPinState'
@@ -28,6 +29,7 @@ class OPinState:
     Sets the pin to Logic LOW.
     """
 
+
 class LogicLevel:
     """Enum representing the logic levels of the pins."""
     HIGH: 'LogicLevel'
@@ -38,6 +40,7 @@ class LogicLevel:
     """
     Logic high, when the voltage is close to ground.
     """
+
 
 class TriggerEdge:
     """Enum representing the trigger edge types. Triggers are based off logic level changes"""
