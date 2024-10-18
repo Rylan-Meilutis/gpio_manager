@@ -73,20 +73,26 @@ class GPIOManager:
         """
         ...
 
-    def setup_pwm(self, pin_num, frequency_hz: int = 60, duty_cycle: int = 0, logic_level: LogicLevel = LogicLevel.HIGH) -> None:
+    def setup_pwm(self, pin_num, frequency_hz: float = 0, duty_cycle: float = 0, period_ms =0, pulse_width_ms = 0, logic_level: LogicLevel = LogicLevel.HIGH) -> None:
         """
         Sets up a PWM signal on the given pin. If The pin must be set up as an output pin before calling this
         function, the values for the logic level and current state will be preserved otherwise the default values
         will be used when setting up pwm for the pin (initial output low and logic high).
 
+        The value of frequency_hz and duty_cycle overwrites period_ms and pulse_width_ms if they are set.
+        If neither frequency_hz and duty_cycle nor period_ms and pulse_width_ms are set, the default value of 1000 hz
+        and a duty_cycle of 0 are used.
+
         :param pin_num: The GPIO pin.
         :param frequency_hz: The period of the pwm signal in hertz.
         :param duty_cycle: The pulse width of the pwm signal as a percentage of the frequency (Duty cycle must be between 0 and 100).
+        :param period_ms: The period in milliseconds.
+        :param pulse_width_ms: The pulse width in milliseconds.
         :param logic_level: The logic level of the pin (set it by using gpio_manager.LogicLevel.[HIGH or LOW]).
         """
         ...
 
-    def set_pwm_duty_cycle(self, pin_num: int, duty_cycle: int) -> None:
+    def set_pwm_duty_cycle(self, pin_num: int, duty_cycle: float) -> None:
         """
         Sets the PWM signal's duty cycle.
         :param pin_num: The GPIO pin.
@@ -94,11 +100,27 @@ class GPIOManager:
         """
         ...
 
-    def set_pwm_frequency(self, pin_num: int, frequency_hz: int) -> None:
+    def set_pwm_frequency(self, pin_num: int, frequency_hz: float) -> None:
         """
         Sets the PWM signal's frequency.
         :param pin_num: The GPIO pin.
         :param frequency_hz: The period of the pwm signal in hertz.
+        """
+        ...
+
+    def set_pwm_period(self, pin_num: int, period_ms: float) -> None:
+        """
+        Sets the PWM signal's duty cycle.
+        :param pin_num: The GPIO pin.
+        :param period_ms: The period in milliseconds.
+        """
+        ...
+
+    def set_pwm_pulse_width(self, pin_num: int, pulse_width_ms: float) -> None:
+        """
+        Sets the PWM signal's frequency.
+        :param pin_num: The GPIO pin.
+        :param pulse_width_ms: The pulse width in milliseconds.
         """
         ...
 

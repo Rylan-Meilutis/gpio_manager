@@ -16,8 +16,8 @@ struct PinManager {
     pwm_setup: HashMap<u8, PwmConfig>,
 }
 struct PwmConfig {
-    frequency: u64,
-    duty_cycle: u64,
+    frequency: f64,
+    duty_cycle: f64,
     logic_level: LogicLevel,
     is_active: bool,
 }

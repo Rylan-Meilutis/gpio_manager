@@ -39,6 +39,42 @@ build-arm32:
   script:
     - chmod +x ci_build.sh && ./ci_build.sh
 
+build-bullseye-aarch64:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  stage: build
+  image:
+    name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:bullseye-arm64
+    docker:
+      platform: linux/arm64/v8
+  id_tokens:
+    PYPI_ID_TOKEN:
+      # Use "testpypi" if uploading to TestPyPI
+      aud: pypi
+  variables:
+    CARGO_BUILD_TARGET: aarch64-unknown-linux-gnu  # Set the target architecture
+
+  script:
+    - chmod +x ci_build.sh && ./ci_build.sh
+
+build-bullseye-arm32:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  stage: build
+  image:
+    name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:bullseye-arm32
+    docker:
+      platform: linux/arm/v7
+  id_tokens:
+    PYPI_ID_TOKEN:
+      # Use "testpypi" if uploading to TestPyPI
+      aud: pypi
+  variables:
+    CARGO_BUILD_TARGET: armv7-unknown-linux-gnueabihf  # Set the target architecture
+
+  script:
+    - chmod +x ci_build.sh && ./ci_build.sh
+
 
 sast:
   stage: test
