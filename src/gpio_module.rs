@@ -1,4 +1,4 @@
-use crate::{InternPullResistorState, LogicLevel, OPinState, Pin, PinManager, PinType, PwmConfig, TriggerEdge};
+use crate::{InternPullResistorState, LogicLevel, PinState, Pin, PinManager, PinType, PwmConfig, TriggerEdge};
 use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
@@ -89,20 +89,14 @@ impl GPIOManager {
                 }
                 return Ok(());
             }
-            let period = if pwm_config.frequency == 0 {
-                Duration::from_millis(0)
+            let duty_cycle = if pwm_config.logic_level == LogicLevel::LOW
+            {
+                100 - pwm_config.duty_cycle
             } else {
-                Duration::from_millis(1000 / pwm_config.frequency)
+                pwm_config.duty_cycle
             };
-            if pwm_config.duty_cycle > 100 {
-                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", pwm_config.duty_cycle)));
-            }
-            let pulse_width = if pwm_config.logic_level == LogicLevel::LOW {
-                Duration::from_micros((period.as_micros() as f64 * ((100f64 - pwm_config.duty_cycle as f64) / 100.0)) as u64)
-            } else {
-                Duration::from_micros((period.as_micros() as f64 * (pwm_config.duty_cycle as f64 / 100.0)) as u64)
-            };
-            pin.set_pwm(period, pulse_width).expect("Failed to set pwm");
+
+            pin.set_pwm_frequency(pwm_config.frequency as f64, duty_cycle as f64 / 100f64).expect("Failed to set pwm frequency");
             Ok(())
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not setup for pwm"))
@@ -286,8 +280,8 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.add_output_pin(25)```
     ///
-    #[pyo3(signature = (pin_num, pin_state = OPinState::LOW, logic_level = LogicLevel::HIGH))]
-    fn add_output_pin(&self, pin_num: u8, pin_state: OPinState, logic_level: LogicLevel) -> PyResult<()> {
+    #[pyo3(signature = (pin_num, pin_state = PinState::LOW, logic_level = LogicLevel::HIGH))]
+    fn add_output_pin(&self, pin_num: u8, pin_state: PinState, logic_level: LogicLevel) -> PyResult<()> {
         let mut manager = self.gpio.lock().unwrap();
         if self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin)"));
@@ -298,12 +292,12 @@ impl GPIOManager {
             .into_output_high();
 
         match pin_state {
-            OPinState::HIGH => if logic_level == LogicLevel::HIGH {
+            PinState::HIGH => if logic_level == LogicLevel::HIGH {
                 output_pin.set_high();
             } else {
                 output_pin.set_low();
             },
-            OPinState::LOW => if logic_level == LogicLevel::HIGH {
+            PinState::LOW => if logic_level == LogicLevel::HIGH {
                 output_pin.set_low();
             } else {
                 output_pin.set_high();
@@ -341,9 +335,9 @@ impl GPIOManager {
         if !self.is_output_pin(pin_num, &manager) {
             drop(manager);
             if logic_level == LogicLevel::LOW {
-                self.add_output_pin(pin_num, OPinState::HIGH, logic_level)?;
+                self.add_output_pin(pin_num, PinState::HIGH, logic_level)?;
             } else {
-                self.add_output_pin(pin_num, OPinState::LOW, logic_level)?;
+                self.add_output_pin(pin_num, PinState::LOW, logic_level)?;
             }
 
             manager = self.gpio.lock().unwrap();
@@ -432,7 +426,7 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.set_output_pin(25, True)```
     #[pyo3(signature = (pin_num, pin_state))]
-    fn set_output_pin(&self, pin_num: u8, pin_state: OPinState) -> PyResult<()> {
+    fn set_output_pin(&self, pin_num: u8, pin_state: PinState) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
         if self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is setup as an input pin)"));
@@ -449,12 +443,12 @@ impl GPIOManager {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (pin is either input or not setup)"));
             }
             match pin_state {
-                OPinState::HIGH => if output_pin.logic_level == LogicLevel::HIGH {
+                PinState::HIGH => if output_pin.logic_level == LogicLevel::HIGH {
                     pin.set_high();
                 } else {
                     pin.set_low();
                 },
-                OPinState::LOW => if output_pin.logic_level == LogicLevel::HIGH {
+                PinState::LOW => if output_pin.logic_level == LogicLevel::HIGH {
                     pin.set_low();
                 } else {
                     pin.set_high();
@@ -479,7 +473,7 @@ impl GPIOManager {
     ///
 
     #[pyo3(signature = (pin_num))]
-    fn get_pin(&self, pin_num: u8) -> PyResult<OPinState> {
+    fn get_pin(&self, pin_num: u8) -> PyResult<PinState> {
         let manager = self.gpio.lock().unwrap();
 
         if self.is_output_pin(pin_num, &manager) {
@@ -495,15 +489,15 @@ impl GPIOManager {
             }
             if pin.is_high() {
                 if pin_arc.logic_level == LogicLevel::HIGH {
-                    Ok(OPinState::HIGH)
+                    Ok(PinState::HIGH)
                 } else {
-                    Ok(OPinState::LOW)
+                    Ok(PinState::LOW)
                 }
             } else {
                 if pin_arc.logic_level == LogicLevel::HIGH {
-                    Ok(OPinState::LOW)
+                    Ok(PinState::LOW)
                 } else {
-                    Ok(OPinState::HIGH)
+                    Ok(PinState::HIGH)
                 }
             }
         } else {
@@ -623,7 +617,7 @@ impl GPIOManager {
                 let pin = &pin_arc.pin;
                 if let PinType::Output(_) = pin {
                     drop(pin_arc);
-                    self.set_output_pin(pin_num, OPinState::LOW)?;
+                    self.set_output_pin(pin_num, PinState::LOW)?;
                 } else {
                     return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in output pins (Something really bad happened to get to this point)"));
                 }

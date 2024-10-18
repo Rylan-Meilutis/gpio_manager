@@ -27,31 +27,31 @@ class GPIOManager:
         """
         ...
 
-    def add_output_pin(self, pin_num: int, pin_state: OPinState = OPinState.LOW, logic_level: LogicLevel = LogicLevel.HIGH) -> None:
+    def add_output_pin(self, pin_num: int, pin_state: PINState = PINState.LOW, logic_level: LogicLevel = LogicLevel.HIGH) -> None:
         """
         Sets up an output pin.
 
         :param pin_num: The GPIO pin to configure as output.
-        :param pin_state: The initial state of the pin (set it by using gpio_manager.OPinState.[HIGH or LOW]).
+        :param pin_state: The initial state of the pin (set it by using gpio_manager.PINState.[HIGH or LOW]).
         :param logic_level: The logic level of the pin (set it by using gpio_manager.LogicLevel.[HIGH or LOW]).
         """
         ...
 
-    def set_output_pin(self, pin_num: int, pin_state: OPinState) -> None:
+    def set_output_pin(self, pin_num: int, pin_state: PINState) -> None:
         """
         Sets the state of an output pin.
 
         :param pin_num: The GPIO pin.
-        :param pin_state: The desired state (set it by using gpio_manager.OPinState.[HIGH or LOW]).
+        :param pin_state: The desired state (set it by using gpio_manager.PINState.[HIGH or LOW]).
         """
         ...
 
-    def get_pin(self, pin_num: int) -> OPinState:
+    def get_pin(self, pin_num: int) -> PINState:
         """
         Polls the current state of an input pin.
 
         :param pin_num: The GPIO pin to get.
-        :return: The current state of the pin (check it by using gpio_manager.OPinState.[HIGH or LOW]).
+        :return: The current state of the pin (check it by using gpio_manager.PINState.[HIGH or LOW]).
         """
         ...
 

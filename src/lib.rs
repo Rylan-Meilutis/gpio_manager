@@ -45,7 +45,7 @@ pub enum InternPullResistorState {
 #[pyclass(eq)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 /// Enum representing the GPIO pin state types.
-pub enum OPinState {
+pub enum PinState {
     HIGH,
     LOW,
 }
@@ -74,7 +74,7 @@ fn gpio_manager(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<pwm_module::PWMManager>()?;
     m.add_class::<i2c_module::I2CManager>()?;
     m.add_class::<InternPullResistorState>()?;
-    m.add_class::<OPinState>()?;
+    m.add_class::<PinState>()?;
     m.add_class::<LogicLevel>()?;
     m.add_class::<TriggerEdge>()?;
     Ok(())
