@@ -5,13 +5,19 @@ class PWMManager:
         """Initializes a new PWMManager instance."""
         ...
 
-    def setup_pwm_channel(self, channel_num: int, frequency_hz: float = 60.0, duty_cycle: int = 0, logic_level: 'LogicLevel' = LogicLevel.HIGH) -> None:
+    def setup_pwm_channel(self, channel_num: int, frequency_hz: float = 60.0, duty_cycle: float = 0,
+                          period_ms=0, pulse_width_ms=0, logic_level: 'LogicLevel' = LogicLevel.HIGH) -> None:
         """
         Sets up a PWM channel with the specified parameters.
+        The value of frequency_hz and duty_cycle overwrites period_ms and pulse_width_ms if they are set.
+        If neither frequency_hz and duty_cycle nor period_ms and pulse_width_ms are set, the default value of 1000 hz
+        and a duty_cycle of 0 are used.
 
         :param channel_num: The PWM channel number (0 or 1).
         :param frequency_hz: The frequency in Hertz.
         :param duty_cycle: The duty cycle (0 to 100).
+        :param period_ms: The period in milliseconds.
+        :param pulse_width_ms: The pulse width in milliseconds.
         :param logic_level: The Logic level of the PWM signal (set using LogicLevel.[NORMAL or INVERSE]).
         """
         ...
@@ -58,6 +64,25 @@ class PWMManager:
         """
         ...
 
+    def set_period(self, channel_num: int, period_ms: float) -> None:
+        """
+        Sets the period for the specified PWM channel in milliseconds.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        :param period_ms: The new period in seconds.
+        """
+
+    ...
+
+    def set_pulse_width(self, channel_num: int, pulse_width_ms: float) -> None:
+        """
+        Sets the pulse width for the specified PWM channel in milliseconds.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        :param pulse_width_ms: The new pulse width in ms.
+        """
+        ...
+
     def get_frequency(self, channel_num: int) -> float:
         """
         Gets the current frequency of the specified PWM channel.
@@ -67,12 +92,30 @@ class PWMManager:
         """
         ...
 
-    def get_duty_cycle(self, channel_num: int) -> int:
+    def get_duty_cycle(self, channel_num: int) -> float:
         """
         Gets the current duty cycle of the specified PWM channel.
 
         :param channel_num: The PWM channel number (0 or 1).
         :return: The current duty cycle (0 to 100).
+        """
+        ...
+
+    def get_period(self, channel_num: int) -> float:
+        """
+        Gets the current period of the specified PWM channel.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        :return: The current period in milliseconds.
+        """
+        ...
+
+    def get_pulse_width(self, channel_num: int) -> float:
+        """
+        Gets the current pulse width of the specified PWM channel.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        :return: The current pulse width in milliseconds.
         """
         ...
 
