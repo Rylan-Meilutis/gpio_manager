@@ -324,7 +324,7 @@ impl GPIOManager {
     ///
     /// Example usage:
     /// ```manager.set_pwm(25, 20, 1200)```
-    #[pyo3(signature = (pin_num, frequency_hz = 0, duty_cycle = 0, period_ms = 0, pulse_width_ms = 0, logic_level = LogicLevel::HIGH)
+    #[pyo3(signature = (pin_num, frequency_hz = 0f64, duty_cycle = 0f64, period_ms = 0f64, pulse_width_ms = 0f64, logic_level = LogicLevel::HIGH)
     )]
     fn setup_pwm(&self, pin_num: u8, frequency_hz: f64, duty_cycle: f64, period_ms: f64, pulse_width_ms: f64, logic_level: LogicLevel) -> PyResult<()> {
         if duty_cycle > 100f64 || duty_cycle < 0f64 {
@@ -384,7 +384,7 @@ impl GPIOManager {
     }
 
 
-    #[pyo3(signature = (pin_num, duty_cycle = 0))]
+    #[pyo3(signature = (pin_num, duty_cycle = 0f64))]
     fn set_pwm_duty_cycle(&self, pin_num: u8, duty_cycle: f64) -> PyResult<()> {
         if duty_cycle > 100f64 || duty_cycle < 0f64 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle)));
@@ -401,7 +401,7 @@ impl GPIOManager {
         }
     }
 
-    #[pyo3(signature = (pin_num, frequency_hz = 60))]
+    #[pyo3(signature = (pin_num, frequency_hz))]
     fn set_pwm_frequency(&self, pin_num: u8, frequency_hz: f64) -> PyResult<()> {
         if frequency_hz < 0f64 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0 , The value {} does not meet this condition", frequency_hz)));
