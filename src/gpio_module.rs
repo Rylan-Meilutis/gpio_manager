@@ -366,8 +366,10 @@ impl GPIOManager {
 
         let duty_cycle = if duty_cycle > 0f64 {
             duty_cycle
-        } else {
+        } else if frequency_hz > 0f64 {
             pulse_width_ms / (1f64 / frequency_hz) * 100.0
+        } else {
+            0f64
         };
 
         if self.is_output_pin(pin_num, &manager) {
@@ -424,7 +426,7 @@ impl GPIOManager {
         }
         let mut manager = self.gpio.lock().unwrap();
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
-            let frequency_hz = 1.0 / (period_ms * 1000f64);
+            let frequency_hz = 1f64 / (period_ms * 1000f64);
             manager.pwm_setup.get_mut(&pin_num).unwrap().frequency = frequency_hz;
             drop(manager);
             self.set_pwm(pin_num)?;
@@ -442,7 +444,10 @@ impl GPIOManager {
         }
         let mut manager = self.gpio.lock().unwrap();
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
-            let duty_cycle = pulse_width_ms / (1.0 / manager.pwm_setup.get(&pin_num).unwrap().frequency) * 100.0;
+            if pulse_width_ms > 1f64 / manager.pwm_setup.get(&pin_num).unwrap().frequency {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pulse width must be less than period"));
+            }
+            let duty_cycle = pulse_width_ms / (1f64 / manager.pwm_setup.get(&pin_num).unwrap().frequency) * 100f64;
             manager.pwm_setup.get_mut(&pin_num).unwrap().duty_cycle = duty_cycle;
             drop(manager);
             self.set_pwm(pin_num)?;
