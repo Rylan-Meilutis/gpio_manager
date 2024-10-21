@@ -67,11 +67,11 @@ impl I2CManager {
     fn open(&self, bus: u8) -> PyResult<()> {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if i2c_lock.is_some() {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus already opened"));
+            return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus already opened"));
         }
 
         let i2c = I2c::with_bus(bus)
-            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to open I2C bus {}: {:?}", bus, e)))?;
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to open I2C bus {}: {:?}", bus, e)))?;
         *i2c_lock = Some(i2c);
         Ok(())
     }
@@ -85,7 +85,7 @@ impl I2CManager {
     fn close(&self) -> PyResult<()> {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if i2c_lock.is_none() {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus is not opened"));
+            return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus is not opened"));
         }
         *i2c_lock = None;
         Ok(())
@@ -106,14 +106,14 @@ impl I2CManager {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if let Some(ref mut i2c) = *i2c_lock {
             i2c.set_slave_address(addr)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to set slave address: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to set slave address: {:?}", e)))?;
 
             // Send command and data
             i2c.write(&[data])
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to write byte: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to write byte: {:?}", e)))?;
             Ok(())
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus is not opened"))
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus is not opened"))
         }
     }
 
@@ -122,14 +122,14 @@ impl I2CManager {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if let Some(ref mut i2c) = *i2c_lock {
             i2c.set_slave_address(addr)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to set slave address: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to set slave address: {:?}", e)))?;
 
             // Send command and data
             i2c.block_write(command, &[data])
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to write byte: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to write byte: {:?}", e)))?;
             Ok(())
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus is not opened"))
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus is not opened"))
         }
     }
 
@@ -150,13 +150,13 @@ impl I2CManager {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if let Some(ref mut i2c) = *i2c_lock {
             i2c.set_slave_address(addr)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to set slave address: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to set slave address: {:?}", e)))?;
             let mut buf = [0u8; 1];
             i2c.block_read(command, &mut buf)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to read byte: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to read byte: {:?}", e)))?;
             Ok(buf[0])
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus is not opened"))
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus is not opened"))
         }
     }
 
@@ -165,13 +165,13 @@ impl I2CManager {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if let Some(ref mut i2c) = *i2c_lock {
             i2c.set_slave_address(addr)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to set slave address: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to set slave address: {:?}", e)))?;
             let mut buf = [0u8; 1];
             i2c.read(&mut buf)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to read byte: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to read byte: {:?}", e)))?;
             Ok(buf[0])
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus is not opened"))
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus is not opened"))
         }
     }
 
@@ -190,12 +190,12 @@ impl I2CManager {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if let Some(ref mut i2c) = *i2c_lock {
             i2c.set_slave_address(addr)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to set slave address: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to set slave address: {:?}", e)))?;
             i2c.write(data.as_bytes())
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to write data: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to write data: {:?}", e)))?;
             Ok(())
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus is not opened"))
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus is not opened"))
         }
     }
 
@@ -205,12 +205,12 @@ impl I2CManager {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if let Some(ref mut i2c) = *i2c_lock {
             i2c.set_slave_address(addr)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to set slave address: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to set slave address: {:?}", e)))?;
             i2c.block_write(command, data.as_bytes())
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to write data: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to write data: {:?}", e)))?;
             Ok(())
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus is not opened"))
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus is not opened"))
         }
     }
 
@@ -233,15 +233,15 @@ impl I2CManager {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if let Some(ref mut i2c) = *i2c_lock {
             i2c.set_slave_address(addr)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to set slave address: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to set slave address: {:?}", e)))?;
 
             let mut buf = vec![0u8; length];
             i2c.block_read(command, &mut buf)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to read data: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to read data: {:?}", e)))?;
 
             Ok(PyBytes::new_bound(py, &buf))
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus is not opened"))
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus is not opened"))
         }
     }
 
@@ -251,15 +251,15 @@ impl I2CManager {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if let Some(ref mut i2c) = *i2c_lock {
             i2c.set_slave_address(addr)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to set slave address: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to set slave address: {:?}", e)))?;
 
             let mut buf = vec![0u8; length];
             i2c.read(&mut buf)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to read data: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to read data: {:?}", e)))?;
 
             Ok(PyBytes::new_bound(py, &buf))
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus is not opened"))
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus is not opened"))
         }
     }
 
@@ -282,13 +282,13 @@ impl I2CManager {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if let Some(ref mut i2c) = *i2c_lock {
             i2c.set_slave_address(addr)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to set slave address: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to set slave address: {:?}", e)))?;
             let mut buf = vec![0u8; read_length];
             i2c.write_read(write_data.as_bytes(), &mut buf)
-               .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Failed to write data: {:?}", e)))?;
+               .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Failed to write data: {:?}", e)))?;
             Ok(PyBytes::new_bound(py, &buf))
         } else {
-            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("I2C bus is not opened"))
+            Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus is not opened"))
         }
     }
 

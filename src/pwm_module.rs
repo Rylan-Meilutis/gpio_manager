@@ -39,7 +39,7 @@ static PWM_MANAGER: Lazy<Arc<Mutex<PWMManager>>> = Lazy::new(|| {
 ///
 /// ```python
 /// pwm_manager = pwm_manager.PWMManager()
-/// pwm_manager.setup_pwm_channel(0, frequency_hz=1000.0, duty_cycle=0.5, polarity=pwm_manager.PWMPolarity.NORMAL)
+/// pwm_manager.setup_pwm_channel(0, frequency_hz=1000, duty_cycle=0.5, polarity=pwm_manager.PWMPolarity.NORMAL)
 /// pwm_manager.set_duty_cycle(0, 0.75)
 /// pwm_manager.stop_pwm_channel(0)
 /// pwm_manager.remove_pwm_channel(0)
@@ -89,7 +89,7 @@ impl PWMManager {
     ///
     /// Example usage:
     /// ```python
-    /// pwm_manager.setup_pwm_channel(0, frequency_hz=1000.0, duty_cycle=0.5, polarity=pwm_manager.PWMPolarity.NORMAL)
+    /// pwm_manager.setup_pwm_channel(0, frequency_hz=100, duty_cycle=0.5, polarity=pwm_manager.PWMPolarity.NORMAL)
     /// ```
     #[pyo3(signature = (channel_num, frequency_hz = 0f64, duty_cycle = 0f64, period_ms = 0f64, pulse_width_ms = 0f64, logic_level = LogicLevel::HIGH)
     )]
@@ -236,7 +236,7 @@ impl PWMManager {
     ///
     /// Example usage:
     /// ```python
-    /// pwm_manager.set_frequency(0, 500.0)
+    /// pwm_manager.set_frequency(0, 500)
     /// ```
     #[pyo3(signature = (channel_num, frequency_hz))]
     fn set_frequency(&self, channel_num: u8, frequency_hz: f64) -> PyResult<()> {
