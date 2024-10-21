@@ -331,13 +331,13 @@ impl GPIOManager {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle)));
         }
         if period_ms < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Period must be greater than 0 , The value {} does not meet this condition", period_ms)));
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Period must be greater than 0, The value {} does not meet this condition", period_ms)));
         }
         if pulse_width_ms > period_ms || pulse_width_ms < 0f64 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be between 0 and period, The value {} does not meet this condition", pulse_width_ms)));
         }
         if frequency_hz < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0 , The value {} does not meet this condition", frequency_hz)));
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0, The value {} does not meet this condition", frequency_hz)));
         }
         let mut manager = self.gpio.lock().unwrap();
         if self.is_input_pin(pin_num, &manager) {
@@ -367,7 +367,7 @@ impl GPIOManager {
         let duty_cycle = if duty_cycle > 0f64 {
             duty_cycle
         } else if frequency_hz > 0f64 {
-            pulse_width_ms / (1f64 / frequency_hz) * 100.0
+            pulse_width_ms / (1f64 / frequency_hz) * 100f64
         } else {
             0f64
         };
@@ -406,7 +406,7 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num, frequency_hz))]
     fn set_pwm_frequency(&self, pin_num: u8, frequency_hz: f64) -> PyResult<()> {
         if frequency_hz < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0 , The value {} does not meet this condition", frequency_hz)));
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0, The value {} does not meet this condition", frequency_hz)));
         }
         let mut manager = self.gpio.lock().unwrap();
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
@@ -422,7 +422,7 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num, period_ms))]
     fn set_pwm_period(&self, pin_num: u8, period_ms: f64) -> PyResult<()> {
         if period_ms < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("period must be greater than 0 , The value {} does not meet this condition", period_ms)));
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("period must be greater than 0, The value {} does not meet this condition", period_ms)));
         }
         let mut manager = self.gpio.lock().unwrap();
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
@@ -440,7 +440,7 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num, pulse_width_ms))]
     fn set_pwm_pulse_width(&self, pin_num: u8, pulse_width_ms: f64) -> PyResult<()> {
         if pulse_width_ms < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("period must be greater than 0 , The value {} does not meet this condition", pulse_width_ms)));
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("period must be greater than 0, The value {} does not meet this condition", pulse_width_ms)));
         }
         let mut manager = self.gpio.lock().unwrap();
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
