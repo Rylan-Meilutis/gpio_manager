@@ -324,20 +324,25 @@ impl GPIOManager {
     ///
     /// Example usage:
     /// ```manager.set_pwm(25, 20, 1200)```
-    #[pyo3(signature = (pin_num, frequency_hz = 0f64, duty_cycle = 0f64, period_ms = 0f64, pulse_width_ms = 0f64, logic_level = LogicLevel::HIGH)
+    #[pyo3(signature = (pin_num, frequency_hz = None, duty_cycle = None, period_ms = None, pulse_width_ms = None, logic_level = LogicLevel::HIGH)
     )]
-    fn setup_pwm(&self, pin_num: u8, frequency_hz: f64, duty_cycle: f64, period_ms: f64, pulse_width_ms: f64, logic_level: LogicLevel) -> PyResult<()> {
-        if duty_cycle > 100f64 || duty_cycle < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle)));
+    fn setup_pwm(&self, pin_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms: Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
+        // let frequency_hz = frequency_hz.unwrap_or(0f64);
+        // let duty_cycle = duty_cycle.unwrap_or(0f64);
+        // let period_ms = period_ms.unwrap_or(0f64);
+        // let pulse_width_ms = pulse_width_ms.unwrap_or(0f64);
+
+        if duty_cycle.is_some() && duty_cycle.unwrap() > 100f64 || duty_cycle.unwrap() < 0f64 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle.unwrap())));
         }
-        if period_ms < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Period must be greater than 0, The value {} does not meet this condition", period_ms)));
+        if period_ms.is_some() && period_ms.unwrap() < 0f64 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Period must be greater than 0, The value {} does not meet this condition", period_ms.unwrap())));
         }
-        if pulse_width_ms > period_ms || pulse_width_ms < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be between 0 and period, The value {} does not meet this condition", pulse_width_ms)));
+        if pulse_width_ms.is_some() && pulse_width_ms.unwrap() > period_ms.unwrap() || pulse_width_ms.unwrap() < 0f64 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be between 0 and period, The value {} does not meet this condition", pulse_width_ms.unwrap())));
         }
-        if frequency_hz < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0, The value {} does not meet this condition", frequency_hz)));
+        if frequency_hz.is_some() && frequency_hz.unwrap() < 0f64 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0, The value {} does not meet this condition", frequency_hz.unwrap())));
         }
         let mut manager = self.gpio.lock().unwrap();
         if self.is_input_pin(pin_num, &manager) {
@@ -358,24 +363,52 @@ impl GPIOManager {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin already configured for PWM"));
         }
 
-        let frequency_hz = if frequency_hz > 0f64 {
-            frequency_hz
-        } else if period_ms > 0f64 {
-            1f64 / (period_ms * 1000f64)
-        } else { 1000f64 };
 
-        let duty_cycle = if duty_cycle > 0f64 {
-            duty_cycle
-        } else if frequency_hz > 0f64 {
-            pulse_width_ms / (1f64 / frequency_hz) * 100f64
-        } else {
-            0f64
+        let frequency = match period_ms {
+            Ok(period_ms) => {
+                1f64 / (period_ms * 1000f64)
+            }
         };
+        let frequency = match frequency_hz {
+            Ok(frequency) => {
+                frequency
+            }
+            None => {
+                if period_ms.is_some() {
+                    frequency
+                } else {
+                    1000f64
+                }
+            }
+        };
+
+        let duty_cycle_percent = match pulse_width_ms {
+            Ok(pulse_width) => {
+                if frequency > 0f64{
+                    pulse_width / (1f64 / frequency) * 100f64
+                }
+                else { 0 }
+            }
+        };
+
+        let duty_cycle_percent = match duty_cycle {
+            Ok(duty_cycle) => {
+                duty_cycle
+            }
+            None => {
+                if pulse_width_ms.is_some() {
+                    duty_cycle_percent
+                } else {
+                    1000f64
+                }
+            }
+        };
+
 
         if self.is_output_pin(pin_num, &manager) {
             manager.pwm_setup.insert(pin_num, PwmConfig {
-                frequency: frequency_hz,
-                duty_cycle,
+                frequency,
+                duty_cycle: duty_cycle_percent,
                 logic_level,
                 is_active: false,
             });

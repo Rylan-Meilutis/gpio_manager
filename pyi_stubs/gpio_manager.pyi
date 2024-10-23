@@ -5,7 +5,8 @@ class GPIOManager:
         """Initializes a new GPIOManager instance."""
         ...
 
-    def add_input_pin(self, pin_num: int, pull_resistor_state: InternPullResistorState = InternPullResistorState.AUTO, logic_level: LogicLevel = LogicLevel.HIGH) -> None:
+    def add_input_pin(self, pin_num: int, pull_resistor_state: InternPullResistorState = InternPullResistorState.AUTO,
+                      logic_level: LogicLevel = LogicLevel.HIGH) -> None:
         """
         Sets up an input pin but does not assign a callback yet.
 
@@ -15,7 +16,8 @@ class GPIOManager:
         """
         ...
 
-    def assign_callback(self, pin_num: int, callback: Callable, trigger_edge: TriggerEdge = TriggerEdge.BOTH, args: Optional[Tuple] = None, debounce_time_ms: int = 2) -> None:
+    def assign_callback(self, pin_num: int, callback: Callable, trigger_edge: TriggerEdge = TriggerEdge.BOTH,
+                        args: Optional[Tuple] = None, debounce_time_ms: int = 2) -> None:
         """
         Assigns a callback to an input pin.
 
@@ -27,7 +29,8 @@ class GPIOManager:
         """
         ...
 
-    def add_output_pin(self, pin_num: int, pin_state: PINState = PINState.LOW, logic_level: LogicLevel = LogicLevel.HIGH) -> None:
+    def add_output_pin(self, pin_num: int, pin_state: PINState = PINState.LOW,
+                       logic_level: LogicLevel = LogicLevel.HIGH) -> None:
         """
         Sets up an output pin.
 
@@ -73,7 +76,8 @@ class GPIOManager:
         """
         ...
 
-    def setup_pwm(self, pin_num, frequency_hz: float = 0, duty_cycle: float = 0, period_ms =0, pulse_width_ms = 0, logic_level: LogicLevel = LogicLevel.HIGH) -> None:
+    def setup_pwm(self, pin_num, frequency_hz: float = None, duty_cycle: float = None, period_ms: float = None,
+                  pulse_width_ms: float = None, logic_level: LogicLevel = LogicLevel.HIGH) -> None:
         """
         Sets up a PWM signal on the given pin. If The pin must be set up as an output pin before calling this
         function, the values for the logic level and current state will be preserved otherwise the default values

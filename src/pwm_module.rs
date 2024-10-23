@@ -91,9 +91,9 @@ impl PWMManager {
     /// ```python
     /// pwm_manager.setup_pwm_channel(0, frequency_hz=100, duty_cycle=0.5, polarity=pwm_manager.PWMPolarity.NORMAL)
     /// ```
-    #[pyo3(signature = (channel_num, frequency_hz = 0f64, duty_cycle = 0f64, period_ms = 0f64, pulse_width_ms = 0f64, logic_level = LogicLevel::HIGH)
+    #[pyo3(signature = (channel_num, frequency_hz = None, duty_cycle = None, period_ms = None, pulse_width_ms = None, logic_level = LogicLevel::HIGH)
     )]
-    fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: f64, duty_cycle: f64, period_ms: f64, pulse_width_ms: f64, logic_level: LogicLevel) -> PyResult<()> {
+    fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms: Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
 
         if pwm_channels.contains_key(&channel_num) {
@@ -106,23 +106,57 @@ impl PWMManager {
             _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
         };
 
-        if duty_cycle > 100f64 || duty_cycle < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, the current value {} does not meet this condition", duty_cycle)));
+        if duty_cycle.is_some() && duty_cycle.unwrap() > 100f64 || duty_cycle.unwrap() < 0f64 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle.unwrap())));
+        }
+        if period_ms.is_some() && period_ms.unwrap() < 0f64 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Period must be greater than 0, The value {} does not meet this condition", period_ms.unwrap())));
+        }
+        if pulse_width_ms.is_some() && pulse_width_ms.unwrap() > period_ms.unwrap() || pulse_width_ms.unwrap() < 0f64 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be between 0 and period, The value {} does not meet this condition", pulse_width_ms.unwrap())));
+        }
+        if frequency_hz.is_some() && frequency_hz.unwrap() < 0f64 {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0, The value {} does not meet this condition", frequency_hz.unwrap())));
         }
 
-        if period_ms < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Period must be greater than 0, the current value {} does not meet this condition", period_ms)));
-        }
-        if pulse_width_ms > period_ms || pulse_width_ms < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be less than the period and greater than 0, the current value {} does not meet this condition", pulse_width_ms)));
-        }
+        let frequency = match period_ms {
+            Ok(period_ms) => {
+                1f64 / (period_ms * 1000f64)
+            }
+        };
+        let frequency = match frequency_hz {
+            Ok(frequency) => {
+                frequency
+            }
+            None => {
+                if period_ms.is_some() {
+                    frequency
+                } else {
+                    1000f64
+                }
+            }
+        };
 
-        let frequency_hz = if frequency_hz > 0f64 { frequency_hz } else if period_ms > 0f64 {
-            1f64 / period_ms * 1000f64
-        } else { 1000f64 };
+        let duty_cycle_percent = match pulse_width_ms {
+            Ok(pulse_width) => {
+                if frequency > 0f64{
+                    pulse_width / (1f64 / frequency) * 100f64
+                }
+                else { 0 }
+            }
+        };
 
-        let duty_cycle = if duty_cycle > 0f64 { duty_cycle } else {
-            pulse_width_ms / (1f64 / frequency_hz) * 100f64
+        let duty_cycle_percent = match duty_cycle {
+            Ok(duty_cycle) => {
+                duty_cycle
+            }
+            None => {
+                if pulse_width_ms.is_some() {
+                    duty_cycle_percent
+                } else {
+                    1000f64
+                }
+            }
         };
 
         let polarity = match logic_level {
@@ -130,7 +164,7 @@ impl PWMManager {
             LogicLevel::LOW => Polarity::Inverse,
         };
 
-        let pwm = Pwm::with_frequency(channel, frequency_hz, duty_cycle / 100f64, polarity, false)
+        let pwm = Pwm::with_frequency(channel, frequency, duty_cycle_percent / 100f64, polarity, false)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
 
         pwm_channels.insert(channel_num, Arc::new(Mutex::new(pwm)));
