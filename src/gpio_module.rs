@@ -365,12 +365,13 @@ impl GPIOManager {
 
 
         let frequency = match period_ms {
-            Ok(period_ms) => {
+            Some(period_ms) => {
                 1f64 / (period_ms * 1000f64)
             }
+            None => { -1f64 }
         };
         let frequency = match frequency_hz {
-            Ok(frequency) => {
+            Some(frequency) => {
                 frequency
             }
             None => {
@@ -383,16 +384,17 @@ impl GPIOManager {
         };
 
         let duty_cycle_percent = match pulse_width_ms {
-            Ok(pulse_width) => {
-                if frequency > 0f64{
+            Some(pulse_width) => {
+                if frequency > 0f64 {
                     pulse_width / (1f64 / frequency) * 100f64
-                }
-                else { 0 }
+                } else { 0f64 }
             }
+            None => { -1f64 }
         };
 
+
         let duty_cycle_percent = match duty_cycle {
-            Ok(duty_cycle) => {
+            Some(duty_cycle) => {
                 duty_cycle
             }
             None => {
