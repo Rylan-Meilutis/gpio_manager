@@ -287,7 +287,7 @@ data = i2c_manager.block_write_read(0x20, 0x01, b'\x01\x02', 3)
 
 ## Description
 
-- These are rust binding around
+- These are rust bindings around
   the [RPPAL - Raspberry Pi Peripheral Access Library](https://github.com/golemparts/rppal) crate that gives access to
   gpio, pwm, spi, and more.
   As of current, the gpio, i2c, and pwm portions are tested and working.

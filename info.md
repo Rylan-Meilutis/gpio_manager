@@ -1,6 +1,6 @@
 ## Description
 
-- These are rust binding around
+- These are rust bindings around
   the [RPPAL - Raspberry Pi Peripheral Access Library](https://github.com/golemparts/rppal) crate that gives access to
   gpio, pwm, spi, and more.
   As of current, the gpio, i2c, and pwm portions are tested and working.
