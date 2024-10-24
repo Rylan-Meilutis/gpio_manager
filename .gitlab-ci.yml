@@ -17,6 +17,8 @@ build-aarch64:
       aud: pypi
   variables:
     CARGO_BUILD_TARGET: aarch64-unknown-linux-gnu  # Set the target architecture
+    CARGO_BUILD_JOBS: 1
+
 
   script:
     - chmod +x ci_build.sh && ./ci_build.sh
@@ -35,6 +37,8 @@ build-arm32:
       aud: pypi
   variables:
     CARGO_BUILD_TARGET: armv7-unknown-linux-gnueabihf  # Set the target architecture
+    CARGO_BUILD_JOBS: 1
+
 
   script:
     - chmod +x ci_build.sh && ./ci_build.sh
@@ -53,6 +57,8 @@ build-bullseye-aarch64:
       aud: pypi
   variables:
     CARGO_BUILD_TARGET: aarch64-unknown-linux-gnu  # Set the target architecture
+    CARGO_BUILD_JOBS: 1
+
 
   script:
     - chmod +x ci_build.sh && ./ci_build.sh
@@ -71,6 +77,8 @@ build-bullseye-arm32:
       aud: pypi
   variables:
     CARGO_BUILD_TARGET: armv7-unknown-linux-gnueabihf  # Set the target architecture
+    CARGO_BUILD_JOBS: 1
+
 
   script:
     - chmod +x ci_build.sh && ./ci_build.sh
