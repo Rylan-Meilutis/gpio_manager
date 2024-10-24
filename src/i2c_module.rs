@@ -67,7 +67,7 @@ impl I2CManager {
     fn open(&self, bus: u8) -> PyResult<()> {
         let mut i2c_lock = self.i2c.lock().unwrap();
         if i2c_lock.is_some() {
-            return Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>("I2C bus already opened"));
+            return Err(PyErr::new::<pyo3::exceptions::PyConnectionRefusedError, _>("I2C bus already opened"));
         }
 
         let i2c = I2c::with_bus(bus)
