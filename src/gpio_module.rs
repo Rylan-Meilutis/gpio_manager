@@ -384,8 +384,6 @@ impl GPIOManager {
             }
         };
 
-        println!("Frequency: {}", frequency);
-
         let duty_cycle_percent = match pulse_width_ms {
             Some(pulse_width) => {
                 if frequency > 0f64 {
