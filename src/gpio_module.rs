@@ -366,7 +366,7 @@ impl GPIOManager {
 
         let frequency = match period_ms {
             Some(period_ms) => {
-                1f64 / (period_ms * 1000f64)
+                1f64 / (period_ms / 1000f64)
             }
             None => { -1f64 }
         };
@@ -387,7 +387,7 @@ impl GPIOManager {
         let duty_cycle_percent = match pulse_width_ms {
             Some(pulse_width) => {
                 if frequency > 0f64 {
-                    pulse_width / (1f64 / frequency) * 100f64
+                    (pulse_width / (1f64 / frequency * 1000f64)) * 100f64
                 } else { 0f64 }
             }
             None => { -1f64 }
@@ -462,7 +462,7 @@ impl GPIOManager {
         }
         let mut manager = self.gpio.lock().unwrap();
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
-            let frequency_hz = 1f64 / (period_ms * 1000f64);
+            let frequency_hz = 1f64 / (period_ms / 1000f64);
             manager.pwm_setup.get_mut(&pin_num).unwrap().frequency = frequency_hz;
             drop(manager);
             self.set_pwm(pin_num)?;
@@ -479,11 +479,12 @@ impl GPIOManager {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("period must be greater than 0, The value {} does not meet this condition", pulse_width_ms)));
         }
         let mut manager = self.gpio.lock().unwrap();
+        let frequency = manager.pwm_setup.get(&pin_num).unwrap().frequency;
         if let Some(_) = manager.pwm_setup.get(&pin_num) {
-            if pulse_width_ms > 1f64 / manager.pwm_setup.get(&pin_num).unwrap().frequency {
+            if pulse_width_ms / 1000f64 > 1f64 / frequency {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pulse width must be less than period"));
             }
-            let duty_cycle = pulse_width_ms / (1f64 / manager.pwm_setup.get(&pin_num).unwrap().frequency) * 100f64;
+            let duty_cycle = pulse_width_ms / ((1f64 / frequency) * 1000f64) * 100f64;
             manager.pwm_setup.get_mut(&pin_num).unwrap().duty_cycle = duty_cycle;
             drop(manager);
             self.set_pwm(pin_num)?;

@@ -121,7 +121,7 @@ impl PWMManager {
 
         let frequency = match period_ms {
             Some(period_ms) => {
-                1f64 / (period_ms * 1000f64)
+                1000f64 / period_ms
             }
             None => { -1f64 }
         };
@@ -137,11 +137,10 @@ impl PWMManager {
                 }
             }
         };
-
         let duty_cycle_percent = match pulse_width_ms {
             Some(pulse_width) => {
                 if frequency > 0f64 {
-                    pulse_width / (1f64 / frequency) * 100f64
+                    (pulse_width / (1f64 / frequency * 1000f64)) * 100f64
                 } else { 0f64 }
             }
             None => { -1f64 }
@@ -298,7 +297,7 @@ impl PWMManager {
         }
         if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
             let pwm = pwm_arc.lock().unwrap();
-            pwm.set_period(Duration::from_secs_f64(period_ms * 1000f64)).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
+            pwm.set_period(Duration::from_secs_f64(period_ms / 1000f64)).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
             Ok(())
         } else {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
@@ -311,9 +310,10 @@ impl PWMManager {
         if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
             let pwm = pwm_arc.lock().unwrap();
             let current_period = pwm.period().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
-            let pulse_width = Duration::from_secs_f64(pulse_width_ms * 1000f64);
+            let pulse_width = Duration::from_secs_f64(pulse_width_ms / 1000f64);
             if pulse_width > current_period {
-                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pulse width must be less than the period"));
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be less than the period, The value {} does not meet this
+                 condition period: {:?}", pulse_width_ms, current_period)));
             }
             pwm.set_pulse_width(pulse_width).map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
             Ok(())
