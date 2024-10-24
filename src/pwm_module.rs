@@ -112,15 +112,12 @@ impl PWMManager {
         if period_ms.is_some() && period_ms.unwrap() < 0f64 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Period must be greater than 0, The value {} does not meet this condition", period_ms.unwrap())));
         }
-
         if pulse_width_ms.is_some() && (pulse_width_ms.unwrap() > period_ms.unwrap() || pulse_width_ms.unwrap() < 0f64) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be between 0 and period, The value {} does not meet this condition", pulse_width_ms.unwrap())));
         }
-
         if frequency_hz.is_some() && frequency_hz.unwrap() < 0f64 {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0, The value {} does not meet this condition", frequency_hz.unwrap())));
         }
-
 
         let frequency = match period_ms {
             Some(period_ms) => {
