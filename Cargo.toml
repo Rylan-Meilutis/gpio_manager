@@ -1,6 +1,6 @@
 [package]
 name = "gpio_manager"
-version = "2.1.10"
+version = "2.1.11"
 edition = "2021"
 include = ["src/**/*.rs", "Cargo.toml", "Cargo.lock", "README.md", "gpio_manager.pyi"]
 authors = ["Rylan Meilutis <rylan.meilutis@gmail.com>"]
@@ -8,8 +8,8 @@ description = "Rust bindings for the rppal crate to manage GPIO pins on a Raspbe
 license = "MIT"
 
 [dependencies]
-pyo3 = { version = "0.22.3", features = ["extension-module", "gil-refs"] }
-once_cell = "1.10"  # Add once_cell to manage the singleton
+pyo3 = { version = "0.22", features = ["extension-module", "gil-refs"] }
+once_cell = "1.20"  # Add once_cell to manage the singleton
 rppal = "0.19"
 
 [lib]

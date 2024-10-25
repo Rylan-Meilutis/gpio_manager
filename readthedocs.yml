@@ -1,0 +1,8 @@
+version: 2
+
+sphinx:
+  configuration: docs/conf.py  # Path to your Sphinx configuration file
+
+python:
+  install:
+    - requirements: docs/requirements.txt  # Install dependencies (if any)
