@@ -28,15 +28,15 @@ Methods
 
    - `channel_num` (int): The PWM channel number (0 or 1).
 
-   - `frequency_hz` (float): Frequency in Hertz.
+   - `frequency_hz` (Optional[float]): Frequency in Hertz.
 
-   - `duty_cycle` (float): Duty cycle as a percentage (0-100).
+   - `duty_cycle` (Optional[float]): Duty cycle as a percentage (0-100).
 
-   - `period_ms` (float): Period in milliseconds.
+   - `period_ms` (Optional[float]): Period in milliseconds.
 
-   - `pulse_width_ms` (float): Pulse width in milliseconds.
+   - `pulse_width_ms` (Optional[float]): Pulse width in milliseconds.
 
-   - `logic_level` (LogicLevel): Logic level of the PWM signal (HIGH, LOW).
+   - `logic_level` (Optional[LogicLevel]): Logic level of the PWM signal (HIGH, LOW).
 
 - **start_pwm_channel**:
    Starts the PWM signal on the specified channel.

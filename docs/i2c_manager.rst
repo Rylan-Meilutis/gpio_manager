@@ -16,7 +16,7 @@ Methods
 
    **Parameters**:
 
-   - `bus` (int): The I2C bus number to open (default is 1).
+   - `bus` (Optional[int]): The I2C bus number to open (default is 1).
 
 - **close**:
    Closes the I2C bus.

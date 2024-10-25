@@ -30,9 +30,9 @@ Methods
 
    - `pin_num` (int): The GPIO pin to configure as input.
 
-   - `pull_resistor_state` (InternPullResistorState): Pull resistor state (PULLUP, PULLDOWN, EXTERNAL, AUTO).
+   - `pull_resistor_state` (Optional[InternPullResistorState]): Pull resistor state (PULLUP, PULLDOWN, EXTERNAL, AUTO).
 
-   - `logic_level` (LogicLevel): The logic level of the pin (HIGH, LOW).
+   - `logic_level` (Optional[LogicLevel]): The logic level of the pin (HIGH, LOW).
 
 - **assign_callback**:
    Assigns a callback function to an input pin.
@@ -41,13 +41,13 @@ Methods
 
    - `pin_num` (int): The GPIO pin.
 
-   - `callback` (Callable): The function to invoke on pin change.
+   - `callback` (Optional[Callable]): The function to invoke on pin change.
 
-   - `trigger_edge` (TriggerEdge): The edge trigger (RISING, FALLING, BOTH).
+   - `trigger_edge` (Optional[TriggerEdge]): The edge trigger (RISING, FALLING, BOTH).
 
    - `args` (Optional[Tuple]): Arguments to pass to the callback function.
 
-   - `debounce_time_ms` (int): Debounce time in milliseconds.
+   - `debounce_time_ms` (Optional[int]): Debounce time in milliseconds.
 
 - **add_output_pin**:
    Sets up an output pin.
@@ -56,9 +56,9 @@ Methods
 
    - `pin_num` (int): The GPIO pin to configure as output.
 
-   - `pin_state` (PinState): Initial state of the pin (HIGH, LOW).
+   - `pin_state` (Optional[PinState]): Initial state of the pin (HIGH, LOW).
 
-   - `logic_level` (LogicLevel): Logic level of the pin (HIGH, LOW).
+   - `logic_level` (Optional[LogicLevel]): Logic level of the pin (HIGH, LOW).
 
 - **set_output_pin**:
    Sets the state of an output pin.
@@ -93,9 +93,9 @@ Methods
 
    - `pin_num` (int): The GPIO pin.
 
-   - `trigger_edge` (TriggerEdge): Trigger type (RISING, FALLING, BOTH).
+   - `trigger_edge` (Optional[TriggerEdge]): Trigger type (RISING, FALLING, BOTH).
 
-   - `timeout_ms` (int): Timeout in milliseconds.
+   - `timeout_ms` (Optional[int]): Timeout in milliseconds.
 
 - **setup_pwm**:
    Sets up a PWM signal on the given pin. If The pin must be set up as an output pin before calling this
@@ -110,15 +110,15 @@ Methods
 
    - `pin_num` (int): The GPIO pin.
 
-   - `frequency_hz` (float): Frequency of the PWM signal in Hertz.
+   - `frequency_hz` (Optional[float]): Frequency of the PWM signal in Hertz.
 
-   - `duty_cycle` (float): Duty cycle as a percentage.
+   - `duty_cycle` (Optional[float]): Duty cycle as a percentage.
 
-   - `period_ms` (float): PWM period in milliseconds.
+   - `period_ms` (Optional[float]): PWM period in milliseconds.
 
-   - `pulse_width_ms` (float): Pulse width in milliseconds.
+   - `pulse_width_ms` (Optional[float]): Pulse width in milliseconds.
 
-   - `logic_level` (LogicLevel): The logic level of the PWM signal (HIGH, LOW).
+   - `logic_level` (Optional[LogicLevel]): The logic level of the PWM signal (HIGH, LOW).
 
 - **set_pwm_duty_cycle**:
    Sets the PWM signal's duty cycle.
