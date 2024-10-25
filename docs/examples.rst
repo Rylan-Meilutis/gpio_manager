@@ -9,9 +9,10 @@ GPIOManager Examples
 - **Basic GPIO Input Pin Setup with Callback**::
 
     import gpio_manager
+    import time
 
-    def button_pressed_callback(channel):
-        print("Button was pressed on channel", channel)
+    def button_pressed_callback():
+        print("Button was pressed on pin 17")
 
     # Set up GPIO Manager
     gpio = gpio_manager.GPIOManager()
@@ -22,13 +23,14 @@ GPIOManager Examples
     # Assign callback to the pin for falling edge detection
     gpio.assign_callback(17, button_pressed_callback, trigger_edge=gpio_manager.TriggerEdge.FALLING)
 
-    # Wait for an edge event (button press)
-    gpio.wait_for_edge(17)
+    while True:
+        time.sleep(1)
+        pass
 
 - **GPIO Output Pin Setup and State Change**::
 
     import gpio_manager
-
+    import time
     # Set up GPIO Manager
     gpio = gpio_manager.GPIOManager()
 
@@ -37,6 +39,9 @@ GPIOManager Examples
 
     # Set pin 18 to HIGH
     gpio.set_output_pin(18, gpio_manager.PinState.HIGH)
+    time.sleep(2)
+    gpio.cleanup()
+
 
 PWMManager Examples
 -------------------
@@ -68,31 +73,27 @@ PWMManager Examples
     # Set up PWM Manager
     pwm = gpio_manager.PWMManager()
 
-    # Set up RGB LED pins with PWM (channels 0, 1, 2)
+    # Set up RGB LED pins with PWM (channels 0 and 1)
     pwm.setup_pwm_channel(0, frequency_hz=1000)
     pwm.setup_pwm_channel(1, frequency_hz=1000)
-    pwm.setup_pwm_channel(2, frequency_hz=1000)
 
     # Function to cycle RGB colors
     def cycle_rgb():
         for duty_cycle in range(0, 101, 5):
             pwm.set_duty_cycle(0, duty_cycle)  # Red
             pwm.set_duty_cycle(1, 100 - duty_cycle)  # Green
-            pwm.set_duty_cycle(2, (duty_cycle + 50) % 100)  # Blue
             time.sleep(0.05)
 
-    # Start PWM on channels 0, 1, 2
+    # Start PWM on channels 0 and 1
     pwm.start_pwm_channel(0)
     pwm.start_pwm_channel(1)
-    pwm.start_pwm_channel(2)
 
     # Cycle through colors
     cycle_rgb()
 
     # Stop PWM on all channels
-    pwm.stop_pwm_channel(0)
-    pwm.stop_pwm_channel(1)
-    pwm.stop_pwm_channel(2)
+    pwm.cleanup()
+
 
 I2CManager Examples
 -------------------
@@ -136,3 +137,4 @@ I2CManager Examples
 
     # Close the I2C bus
     i2c.close()
+
