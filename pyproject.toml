@@ -20,7 +20,7 @@ classifiers = [
 
 [project.urls]
 homepage = "https://github.com/Rylan-Meilutis/gpio_manager"
-# documentation = "readthedocs.org"
+documentation = "readthedocs.org/projects/gpio-manager"
 repository = "https://github.com/Rylan-Meilutis/gpio_manager"
 
 
