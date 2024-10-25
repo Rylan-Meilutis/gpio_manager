@@ -15,6 +15,7 @@ Methods
    Opens the I2C bus.
 
    **Parameters**:
+
    - `bus` (int): The I2C bus number to open (default is 1).
 
 - **close**:
@@ -24,21 +25,27 @@ Methods
    Writes a single byte to the I2C slave device.
 
    **Parameters**:
+
    - `addr` (int): The I2C slave address.
+
    - `data` (int): The byte to write.
 
 - **block_write_byte**:
    Writes a single byte with a command to the I2C slave device.
 
    **Parameters**:
+
    - `addr` (int): The I2C slave address.
+
    - `command` (int): The command to send.
+
    - `data` (int): The byte to write.
 
 - **read_byte**:
    Reads a single byte from the I2C slave device.
 
    **Parameters**:
+
    - `addr` (int): The I2C slave address.
 
    **Returns**:
@@ -48,7 +55,9 @@ Methods
    Reads a single byte with a command from the I2C slave device.
 
    **Parameters**:
+
    - `addr` (int): The I2C slave address.
+
    - `command` (int): The command to send before reading.
 
    **Returns**:
@@ -58,22 +67,29 @@ Methods
    Writes data to the I2C slave device.
 
    **Parameters**:
+
    - `addr` (int): The I2C slave address.
+
    - `data` (bytes): The bytes to write.
 
 - **block_write**:
    Writes data with a command to the I2C slave device.
 
    **Parameters**:
+
    - `addr` (int): The I2C slave address.
+
    - `command` (int): The command to send.
+
    - `data` (bytes): The bytes to write.
 
 - **read**:
    Reads data from the I2C slave device.
 
    **Parameters**:
+
    - `addr` (int): The I2C slave address.
+
    - `length` (int): The number of bytes to read.
 
    **Returns**:
@@ -83,8 +99,11 @@ Methods
    Reads data with a command from the I2C slave device.
 
    **Parameters**:
+
    - `addr` (int): The I2C slave address.
+
    - `command` (int): The command to send before reading.
+
    - `length` (int): The number of bytes to read.
 
    **Returns**:
@@ -94,8 +113,11 @@ Methods
    Performs a write followed by a read operation.
 
    **Parameters**:
+
    - `addr` (int): The I2C slave address.
+
    - `write_data` (bytes): The bytes to write.
+
    - `read_length` (int): The number of bytes to read.
 
    **Returns**:
@@ -105,9 +127,13 @@ Methods
    Performs a block write followed by a block read operation.
 
    **Parameters**:
+
    - `addr` (int): The I2C slave address.
+
    - `command` (int): The command to send.
+
    - `write_data` (bytes): The bytes to write.
+
    - `read_length` (int): The number of bytes to read.
 
    **Returns**:
