@@ -5,89 +5,66 @@ stages:
 
 build-aarch64:
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG'
   stage: build
   image:
     name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:arm64
     docker:
       platform: linux/arm64/v8
-  id_tokens:
-    PYPI_ID_TOKEN:
-      # Use "testpypi" if uploading to TestPyPI
-      aud: pypi
   variables:
     CARGO_BUILD_TARGET: aarch64-unknown-linux-gnu  # Set the target architecture
     CARGO_BUILD_JOBS: 1
-
 
   script:
     - chmod +x ci_build.sh && ./ci_build.sh
 
 build-arm32:
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG'
   stage: build
   image:
     name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:arm32
     docker:
       platform: linux/arm/v7
-  id_tokens:
-    PYPI_ID_TOKEN:
-      # Use "testpypi" if uploading to TestPyPI
-      aud: pypi
   variables:
     CARGO_BUILD_TARGET: armv7-unknown-linux-gnueabihf  # Set the target architecture
     CARGO_BUILD_JOBS: 1
-
 
   script:
     - chmod +x ci_build.sh && ./ci_build.sh
 
 build-bullseye-aarch64:
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG'
   stage: build
   image:
     name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:bullseye-arm64
     docker:
       platform: linux/arm64/v8
-  id_tokens:
-    PYPI_ID_TOKEN:
-      # Use "testpypi" if uploading to TestPyPI
-      aud: pypi
   variables:
     CARGO_BUILD_TARGET: aarch64-unknown-linux-gnu  # Set the target architecture
     CARGO_BUILD_JOBS: 1
-
 
   script:
     - chmod +x ci_build.sh && ./ci_build.sh
 
 build-bullseye-arm32:
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_COMMIT_TAG'
   stage: build
   image:
     name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:bullseye-arm32
     docker:
       platform: linux/arm/v7
-  id_tokens:
-    PYPI_ID_TOKEN:
-      # Use "testpypi" if uploading to TestPyPI
-      aud: pypi
   variables:
     CARGO_BUILD_TARGET: armv7-unknown-linux-gnueabihf  # Set the target architecture
     CARGO_BUILD_JOBS: 1
 
-
   script:
     - chmod +x ci_build.sh && ./ci_build.sh
-
 
 sast:
   stage: test
 include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
-
-
