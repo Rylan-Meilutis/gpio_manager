@@ -137,3 +137,4 @@ I2CManager Examples
 
     # Close the I2C bus
     i2c.close()
+
