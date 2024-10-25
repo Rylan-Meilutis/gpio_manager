@@ -8,6 +8,7 @@ PWM Manager
 Enums
 -----
 The following enums are used in this class. See the `Enums <enums.html>`_ page for details:
+
 - `LogicLevel`
 
 PWMManager Class

@@ -8,9 +8,13 @@ GPIO Manager
 Enums
 -----
 The following enums are used in this class. See the `Enums <enums.html>`_ page for details:
+
 - `InternPullResistorState`
+
 - `PinState`
+
 - `LogicLevel`
+
 - `TriggerEdge`
 
 GPIOManager Class
