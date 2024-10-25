@@ -5,7 +5,7 @@ class I2CManager:
         """Initializes a new I2CManager instance."""
         ...
 
-    def open(self, bus: int = 1) -> None:
+    def open(self, bus: Optional[int] = 1) -> None:
         """
         Opens the I2C bus.
 
