@@ -316,4 +316,3 @@ data = i2c_manager.block_write_read(0x20, 0x01, b'\x01\x02', 3)
 
 - Support for UART
 - support for SPI
-- Documentation on readthedocs.org
