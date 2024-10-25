@@ -11,9 +11,6 @@ build-aarch64:
     name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:arm64
     docker:
       platform: linux/arm64/v8
-  id_tokens:
-    PYPI_ID_TOKEN:
-      aud: pypi
   variables:
     CARGO_BUILD_TARGET: aarch64-unknown-linux-gnu
     CARGO_BUILD_JOBS: 1
@@ -28,9 +25,6 @@ build-arm32:
     name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:arm32
     docker:
       platform: linux/arm/v7
-  id_tokens:
-    PYPI_ID_TOKEN:
-      aud: pypi
   variables:
     CARGO_BUILD_TARGET: armv7-unknown-linux-gnueabihf
     CARGO_BUILD_JOBS: 1
@@ -45,9 +39,6 @@ build-bullseye-aarch64:
     name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:bullseye-arm64
     docker:
       platform: linux/arm64/v8
-  id_tokens:
-    PYPI_ID_TOKEN:
-      aud: pypi
   variables:
     CARGO_BUILD_TARGET: aarch64-unknown-linux-gnu
     CARGO_BUILD_JOBS: 1
@@ -62,9 +53,6 @@ build-bullseye-arm32:
     name: registry.gitlab.rylanswebsite.com/rylan-meilutis/rust-docker-builder:bullseye-arm32
     docker:
       platform: linux/arm/v7
-  id_tokens:
-    PYPI_ID_TOKEN:
-      aud: pypi
   variables:
     CARGO_BUILD_TARGET: armv7-unknown-linux-gnueabihf
     CARGO_BUILD_JOBS: 1
