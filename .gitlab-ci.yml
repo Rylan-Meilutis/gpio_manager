@@ -65,6 +65,8 @@ build-bullseye-arm32:
 
 sast:
   stage: test
+  rules:
+    - when: always  # Ensures this job runs on every push
 include:
   - template: Security/SAST.gitlab-ci.yml
   - template: Security/Secret-Detection.gitlab-ci.yml
