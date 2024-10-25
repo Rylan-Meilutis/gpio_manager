@@ -5,9 +5,11 @@ use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use rppal::i2c::I2c;
 use std::sync::{Arc, Mutex};
 
+
 static I2C_MANAGER: Lazy<Arc<Mutex<I2CManager>>> = Lazy::new(|| {
     Arc::new(Mutex::new(I2CManager::new_singleton().expect("Failed to initialize I2CManager")))
 });
+
 
 #[pyclass]
 /// I2CManager provides methods to manage I2C communication.
@@ -25,6 +27,7 @@ pub struct I2CManager {
     i2c: Arc<Mutex<Option<I2c>>>,
 }
 
+
 impl I2CManager {
     /// Internal method to initialize the I2CManager singleton.
     fn new_singleton() -> PyResult<Self> {
@@ -40,6 +43,7 @@ impl I2CManager {
         })
     }
 }
+
 
 #[pymethods]
 impl I2CManager {
