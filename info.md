@@ -305,4 +305,3 @@
 
 - Support for UART
 - support for SPI
-- Documentation on readthedocs.org
