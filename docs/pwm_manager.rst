@@ -135,3 +135,4 @@ Methods
    **Example**::
 
         PWM_manager.cleanup()
+

@@ -202,3 +202,4 @@ Methods
    **Example**::
 
        GPIO_manager.cleanup()
+

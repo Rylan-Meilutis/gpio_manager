@@ -186,3 +186,4 @@ Methods
    **Example**::
 
         data = I2C_manager.block_write_read(addr=0x1A, command=0x02, write_data=b'\x01', read_length=3)
+
