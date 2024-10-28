@@ -17,6 +17,14 @@ The `PWMManager` class provides methods to control PWM channels.
 
 Methods
 -------
+- **Constructor**:
+   Initializes the PWMManager class, the PWM pins are in an unknown state until they are setup.
+
+   **Example**::
+
+       PWM_manager = gpio_manager.PWMManager()
+
+
 - **setup_pwm_channel**:
    Sets up a PWM channel with the specified parameters.
     The value of frequency_hz and duty_cycle overwrites period_ms and pulse_width_ms if they are set.
