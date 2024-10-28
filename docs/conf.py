@@ -36,6 +36,6 @@ html_theme_options = {
     "sidebar_hide_name": False,
     "navigation_with_keys": True,
 }
-
+html_title = "GPIO Manager Documentation"
 html_static_path = ['_static']
 
