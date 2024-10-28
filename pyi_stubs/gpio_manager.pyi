@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class GPIOManager:
     """GPIOManager provides methods to manage GPIO pins and register callbacks."""
 
