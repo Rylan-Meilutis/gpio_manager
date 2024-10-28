@@ -11,6 +11,13 @@ The `I2CManager` class provides methods to manage I2C communication with slave d
 
 Methods
 -------
+- **Constructor**:
+    Initializes the I2CManager class, the pins are in an unknown state until the bus is opened.
+
+    **Example**::
+
+          I2C_manager = gpio_manager.I2CManager()
+
 - **open**:
    Opens the I2C bus.
 
