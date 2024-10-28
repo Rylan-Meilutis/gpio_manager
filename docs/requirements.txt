@@ -1,3 +1,2 @@
 sphinx
 furo
-gpio_manager
