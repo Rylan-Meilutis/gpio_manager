@@ -2,6 +2,7 @@ use crate::LogicLevel;
 use once_cell::sync::Lazy;
 use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use rppal::pwm::{Channel, Polarity, Pwm};
+use rppal::system::{DeviceInfo, Model};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
@@ -128,13 +129,13 @@ impl PWMManager {
             1 => Channel::Pwm1,
             _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
         };
-
-        match channel_num {
-            0 => set_gpio18_to_pwm().expect("Failed to set GPIO18 to PWM"),
-            1 => set_gpio19_to_pwm().expect("Failed to set GPIO19 to PWM"),
-            _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+        if Model::RaspberryPi5 == DeviceInfo::new().unwrap().model() {
+            match channel_num {
+                0 => set_gpio18_to_pwm().expect("Failed to set GPIO18 to PWM"),
+                1 => set_gpio19_to_pwm().expect("Failed to set GPIO19 to PWM"),
+                _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+            }
         }
-
         if duty_cycle.is_some() && (duty_cycle.unwrap() > 100f64 || duty_cycle.unwrap() < 0f64) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle.unwrap())));
         }
