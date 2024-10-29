@@ -5,6 +5,29 @@ use rppal::pwm::{Channel, Polarity, Pwm};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use std::process::Command;
+
+fn set_gpio18_to_pwm() -> std::io::Result<()> {
+    // Set GPIO18 to alternate function `a3` with pull-down
+    Command::new("pinctrl")
+        .args(["set", "18", "a3", "pd"])
+        .status()
+        .expect("Failed to execute pinctrl command");
+
+    Ok(())
+}
+
+fn set_gpio19_to_pwm() -> std::io::Result<()> {
+    // Set GPIO18 to alternate function `a3` with pull-down
+    Command::new("pinctrl")
+        .args(["set", "19", "a3", "pd"])
+        .status()
+        .expect("Failed to execute pinctrl command");
+
+    Ok(())
+}
+
+
 
 
 #[pyclass(eq, eq_int)]
@@ -105,6 +128,12 @@ impl PWMManager {
             1 => Channel::Pwm1,
             _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
         };
+
+        match channel_num {
+            0 => set_gpio18_to_pwm().expect("Failed to set GPIO18 to PWM"),
+            1 => set_gpio19_to_pwm().expect("Failed to set GPIO19 to PWM"),
+            _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+        }
 
         if duty_cycle.is_some() && (duty_cycle.unwrap() > 100f64 || duty_cycle.unwrap() < 0f64) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle.unwrap())));
