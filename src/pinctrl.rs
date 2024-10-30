@@ -2,7 +2,7 @@ use rust_embed::RustEmbed;
 use std::io::Write;
 use std::os::unix::io::{FromRawFd, IntoRawFd};
 use std::process::Command;
-use libc::{memfd_create, ftruncate, MFD_CLOEXEC, MFD_ALLOW_SEALING};
+use libc::{memfd_create, ftruncate, MFD_CLOEXEC, MFD_ALLOW_SEALING, off_t};
 use std::ffi::CString;
 use std::fs::File;
 
@@ -32,7 +32,7 @@ fn load_pinctrl_in_memory() -> std::io::Result<File> {
     memfile.write_all(&pinctrl_data.data)?;
 
     // Use ftruncate and check the return value directly
-    if unsafe { ftruncate(fd, pinctrl_data.data.len() as i64) } != 0 {
+    if unsafe { ftruncate(fd, pinctrl_data.data.len() as off_t) } != 0 {
         return Err(std::io::Error::last_os_error());
     }
 
