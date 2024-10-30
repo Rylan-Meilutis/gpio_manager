@@ -28,7 +28,7 @@ fn hwpwm_setup(pin: usize, command: &str) -> std::io::Result<()> {
         .args(["set", &*pin.to_string(), command, "pd"])
         .status()
         .expect("Failed to execute pinctrl. Are raspberry pi utils installed?\n if you need to install run the following script:\n\
-                https://github.com/Rylan-Meilutis/gpio_manager/blob/main/install-utils.sh");
+                https://raw.githubusercontent.com/Rylan-Meilutis/gpio_manager/refs/heads/main/install-utils.sh");
 
     Ok(())
 }
