@@ -4,9 +4,9 @@ use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use rppal::pwm::{Channel, Polarity, Pwm};
 use rppal::system::{DeviceInfo, Model};
 use std::collections::HashMap;
-use std::process::Command;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+use crate::pinctrl;
 
 
 fn set_gpio_to_pwm_pi5(pin: usize) -> std::io::Result<()> {
@@ -24,11 +24,7 @@ fn set_gpio_to_pwm_other(pin: usize) -> std::io::Result<()> {
 }
 
 fn hwpwm_setup(pin: usize, command: &str) -> std::io::Result<()> {
-    Command::new("pinctrl")
-        .args(["set", &*pin.to_string(), command, "pd"])
-        .status()
-        .expect("Failed to execute pinctrl. Are raspberry pi utils installed?\n if you need to install run the following script:\n\
-                https://raw.githubusercontent.com/Rylan-Meilutis/gpio_manager/refs/heads/main/install-utils.sh");
+    pinctrl::execute_pinctrl_in_memory(&["set", &pin.to_string(), command, "pd"]).expect("Failed to set pin");
 
     Ok(())
 }
@@ -137,11 +133,11 @@ impl PWMManager {
             Model::RaspberryPi5 => match channel_num {
                 0 => match set_gpio_to_pwm_pi5(18) {
                     Ok(_)=>{},
-                    Err(_) => {}
+                    Err(_) => {println!("an error occurred, pin state is unknown, make sure you user is in the gpio group")}
                 },
                 1 => match set_gpio_to_pwm_pi5(19) {
                     Ok(_)=>{},
-                    Err(_) => {}
+                    Err(_) => {println!("an error occurred, pin state is unknown, make sure you user is in the gpio group")}
                 },
                 _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
             },

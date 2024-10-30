@@ -1,6 +1,7 @@
 mod gpio_module;
 mod pwm_module;
 mod i2c_module;
+mod pinctrl;
 
 
 use pyo3::prelude::*;
