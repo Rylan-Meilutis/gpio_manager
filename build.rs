@@ -21,10 +21,14 @@ fn main() {
     // Build pinctrl from the utils repo
     println!("Building pinctrl...");
 
-    Command::new("apt-get")
-        .args(&["install", "-y", "cmake", "device-tree-compiler", "libfdt-dev"])
-        .status()
-        .expect("Failed to install dependencies");
+    match Command::new("apt-get").args(&["install", "-y", "cmake", "device-tree-compiler", "libfdt-dev"]).status()
+    {
+        Ok(_) => {}
+        Err(_) => {
+            eprintln!("Failed to install dependencies. Please make sure you have the following packages installed:");
+            eprintln!("cmake, device-tree-compiler, libfdt-dev");
+        }
+    }
 
     Command::new("cmake")
         .arg("CMakeLists.txt")
@@ -48,6 +52,9 @@ fn main() {
         format!("{}/pinctrl", assets_dir),
     ).unwrap();
     println!("pinctrl is now available in the assets directory.");
+
+    //remove the utils directory
+    fs::remove_dir_all(repo_dir).unwrap();
 
     let pyi_parts_dir = Path::new("pyi_stubs");
     let output_pyi = Path::new("gpio_manager.pyi");

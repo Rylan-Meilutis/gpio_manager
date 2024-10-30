@@ -10,17 +10,14 @@ use std::fs::File;
 #[folder = "assets/"]
 struct Asset;
 
+/// Creates an in-memory file with the contents of the `pinctrl` binary.
 fn load_pinctrl_in_memory() -> std::io::Result<File> {
-    // Use memfd_create to create an anonymous memory file descriptor
+    // Create an anonymous memory file descriptor
     let fd = unsafe {
         let name = CString::new("pinctrl_memory")?;
-        let name_ptr = name.as_ptr(); // This pointer is now safe to use
-
-        memfd_create(
-            name_ptr,
-            MFD_CLOEXEC | MFD_ALLOW_SEALING,
-        )
+        memfd_create(name.as_ptr(), MFD_CLOEXEC | MFD_ALLOW_SEALING)
     };
+
     if fd < 0 {
         return Err(std::io::Error::last_os_error());
     }
@@ -33,20 +30,38 @@ fn load_pinctrl_in_memory() -> std::io::Result<File> {
 
     // Write the binary data to the memory file
     memfile.write_all(&pinctrl_data.data)?;
-    unsafe { ftruncate(fd, pinctrl_data.data.len() as i64) };
+
+    // Use ftruncate and check the return value directly
+    if unsafe { ftruncate(fd, pinctrl_data.data.len() as i64) } != 0 {
+        return Err(std::io::Error::last_os_error());
+    }
 
     Ok(memfile)
 }
 
-pub(crate) fn execute_pinctrl_in_memory(args: &[&str]) -> std::io::Result<()> {
+/// Executes the `pinctrl` binary loaded in memory with the given arguments.
+pub fn execute_pinctrl_in_memory(args: &[&str]) -> std::io::Result<()> {
     // Load pinctrl binary into memory
     let memfile = load_pinctrl_in_memory()?;
 
-    // Use the file descriptor to execute the binary with Command
-    Command::new(format!("/proc/self/fd/{}", memfile.into_raw_fd()))
-        .args(args)
-        .status()
-        .expect("Failed to execute pinctrl from memory");
+    // Use `into_raw_fd` to take ownership of the file descriptor
+    let fd = memfile.into_raw_fd();
 
-    Ok(())
+    // Execute the in-memory binary
+    let status = Command::new(format!("/proc/self/fd/{}", fd))
+        .args(args)
+        .status();
+
+    // Close the file descriptor manually since we used `into_raw_fd`
+    unsafe { libc::close(fd) };
+
+    // Check the status of the command execution
+    match status {
+        Ok(exit_status) if exit_status.success() => Ok(()),
+        Ok(exit_status) => Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("pinctrl exited with status: {:?}", exit_status),
+        )),
+        Err(e) => Err(e),
+    }
 }

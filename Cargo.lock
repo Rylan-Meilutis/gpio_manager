@@ -64,7 +64,7 @@ dependencies = [
 
 [[package]]
 name = "gpio_manager"
-version = "2.1.16"
+version = "2.1.17"
 dependencies = [
  "libc",
  "once_cell",

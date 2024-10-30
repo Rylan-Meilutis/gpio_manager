@@ -3,8 +3,8 @@ venv/
 .idea/
 .DS_Store
 gpio_manager.pyi
-/docs/_static/
-/docs/_templates/
-/docs/_build/
-/assets/
-/utils/
+docs/_static/
+docs/_templates/
+docs/_build/
+assets/
+utils/
