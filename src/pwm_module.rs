@@ -11,21 +11,24 @@ use std::time::Duration;
 
 fn set_gpio_to_pwm_pi5(pin: usize) -> std::io::Result<()> {
     // Set GPIO18 to alternate function `a3` with pull-down
-    Command::new("pinctrl")
-        .args(["set", &*pin.to_string(), "a3", "pd"])
-        .status()
-        .expect("Failed to execute pinctrl command");
-
+    hwpwm_setup(pin, "a3")?;
     Ok(())
 }
 
 
 fn set_gpio_to_pwm_other(pin: usize) -> std::io::Result<()> {
     // Set GPIO18 to alternate function `a3` with pull-down
-    Command::new("raspi-gpio")
-        .args(["set", &*pin.to_string(), "a5", "pd"])
+    hwpwm_setup(pin, "a5")?;
+
+    Ok(())
+}
+
+fn hwpwm_setup(pin: usize, command: &str) -> std::io::Result<()> {
+    Command::new("pinctrl")
+        .args(["set", &*pin.to_string(), command, "pd"])
         .status()
-        .expect("Failed to execute pinctrl command");
+        .expect("Failed to execute pinctrl. Are raspberry pi utils installed?\n if you need to install run the following script:\n\
+                https://github.com/Rylan-Meilutis/gpio_manager/blob/main/install-utils.sh");
 
     Ok(())
 }
@@ -132,14 +135,26 @@ impl PWMManager {
         
         match DeviceInfo::new().unwrap().model()  {
             Model::RaspberryPi5 => match channel_num {
-                0 => set_gpio_to_pwm_pi5(18).expect("Failed to set GPIO18 to PWM"),
-                1 => set_gpio_to_pwm_pi5(19).expect("Failed to set GPIO19 to PWM"),
+                0 => match set_gpio_to_pwm_pi5(18) {
+                    Ok(_)=>{},
+                    Err(_) => {}
+                },
+                1 => match set_gpio_to_pwm_pi5(19) {
+                    Ok(_)=>{},
+                    Err(_) => {}
+                },
                 _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
             },
 
             _ => match channel_num {
-                0 => set_gpio_to_pwm_other(18).expect("Failed to set GPIO18 to PWM"),
-                1 => set_gpio_to_pwm_other(19).expect("Failed to set GPIO19 to PWM"),
+                0 => match set_gpio_to_pwm_other(18) {
+                    Ok(_)=>{},
+                    Err(_) => {}
+                },
+                1 => match set_gpio_to_pwm_other(18) {
+                    Ok(_)=>{},
+                    Err(_) => {}
+                },
                 _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
             },
         }

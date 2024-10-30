@@ -5,6 +5,15 @@ PWM Manager
    :members:
    :undoc-members:
 
+Reqirements
+------------
+- The PWMManager class requires `pinctrl` to be installed. To install the library, run the following command:
+
+  .. code-block:: bash
+
+     curl -sSL https://github.com/Rylan-Meilutis/gpio_manager/blob/main/install-utils.sh -o install-utils.sh && sudo bash install-utils.sh && rm install-utils.sh
+  without the library installed, the pin may not be setup for hardware PWM, and thus the PWM signal may not be generated.
+
 Enums
 -----
 The following enums are used in this class. See the `Enums <enums.html>`_ page for details:
