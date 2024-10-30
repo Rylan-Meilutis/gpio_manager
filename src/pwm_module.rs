@@ -133,11 +133,11 @@ impl PWMManager {
             Model::RaspberryPi5 => match channel_num {
                 0 => match set_gpio_to_pwm_pi5(18) {
                     Ok(_)=>{},
-                    Err(_) => {println!("an error occured, pin state is unknown, make sure you user is in the gpio group")}
+                    Err(_) => {println!("an error occurred, pin state is unknown, make sure you user is in the gpio group")}
                 },
                 1 => match set_gpio_to_pwm_pi5(19) {
                     Ok(_)=>{},
-                    Err(_) => {println!("an error occured, pin state is unknown, make sure you user is in the gpio group")}
+                    Err(_) => {println!("an error occurred, pin state is unknown, make sure you user is in the gpio group")}
                 },
                 _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
             },
