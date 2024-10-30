@@ -137,11 +137,13 @@ impl PWMManager {
             Model::RaspberryPi5 => match channel_num {
                 0 => match set_gpio_to_pwm_pi5(18) {
                     Ok(_)=>{},
-                    Err(_) => {}
+                    Err(_) => {println!("Failed to execute pinctrl. Are raspberry pi utils installed?\n if you need to install run the following script:\n\
+                https://raw.githubusercontent.com/Rylan-Meilutis/gpio_manager/refs/heads/main/install-utils.sh")}
                 },
                 1 => match set_gpio_to_pwm_pi5(19) {
                     Ok(_)=>{},
-                    Err(_) => {}
+                    Err(_) => {println!("Failed to execute pinctrl. Are raspberry pi utils installed?\n if you need to install run the following script:\n\
+                https://raw.githubusercontent.com/Rylan-Meilutis/gpio_manager/refs/heads/main/install-utils.sh")}
                 },
                 _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
             },
