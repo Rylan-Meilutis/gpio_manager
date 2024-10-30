@@ -12,7 +12,7 @@ Reqirements
   .. code-block:: bash
 
      curl -sSL https://raw.githubusercontent.com/Rylan-Meilutis/gpio_manager/refs/heads/main/install-utils.sh -o install-utils.sh && sudo bash install-utils.sh && rm install-utils.sh
-  without the library installed, the pin may not be setup for hardware PWM, and thus the PWM signal may not be generated.
+  Without the library installed, the pin may not be setup for hardware PWM, and thus the PWM signal may not be generated.
 
 Enums
 -----
