@@ -117,7 +117,7 @@ class GPIOManager:
 
     def set_pwm_period(self, pin_num: int, period_ms: float) -> None:
         """
-        Sets the PWM signal's duty cycle.
+        Sets the PWM signal's period.
         :param pin_num: The GPIO pin.
         :param period_ms: The period in milliseconds.
         """
@@ -125,7 +125,7 @@ class GPIOManager:
 
     def set_pwm_pulse_width(self, pin_num: int, pulse_width_ms: float) -> None:
         """
-        Sets the PWM signal's frequency.
+        Sets the PWM signal's pulse width.
         :param pin_num: The GPIO pin.
         :param pulse_width_ms: The pulse width in milliseconds.
         """

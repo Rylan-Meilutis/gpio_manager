@@ -484,8 +484,8 @@ impl GPIOManager {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("period must be greater than 0, The value {} does not meet this condition", pulse_width_ms)));
         }
         let mut manager = self.gpio.lock().unwrap();
-        let frequency = manager.pwm_setup.get(&pin_num).unwrap().frequency;
-        if let Some(_) = manager.pwm_setup.get(&pin_num) {
+        if let Some(pin) = manager.pwm_setup.get(&pin_num) {
+            let frequency = pin.frequency;
             if pulse_width_ms / 1000f64 > 1f64 / frequency {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pulse width must be less than period"));
             }
@@ -707,6 +707,7 @@ impl GPIOManager {
             // Re-lock manager to remove the input pin
             let mut manager = self.gpio.lock().unwrap();
             manager.input_pins.remove(&pin_num);
+
         }
         // Handle output pins
         else if let Some(pin_arc) = output_pin_arc {
@@ -717,7 +718,15 @@ impl GPIOManager {
                 manager.pwm_setup.get(&pin_num).is_some()
             };
             if pwm_exists {
+                if let PinType::Output(out_pin) = &pin_arc.pin {
+
+                    let mut pin = out_pin.lock().unwrap();
+                    pin.clear_pwm().expect("Failed to clear pwm");
+                    drop(pin);
+
+                }
                 drop(pin_arc);
+
                 // Stop PWM and reset it
                 self.stop_pwm(pin_num)?;
 

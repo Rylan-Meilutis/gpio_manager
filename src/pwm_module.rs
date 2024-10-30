@@ -2,9 +2,36 @@ use crate::LogicLevel;
 use once_cell::sync::Lazy;
 use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use rppal::pwm::{Channel, Polarity, Pwm};
+use rppal::system::{DeviceInfo, Model};
 use std::collections::HashMap;
+use std::process::Command;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
+
+
+fn set_gpio_to_pwm_pi5(pin: usize) -> std::io::Result<()> {
+    // Set GPIO18 to alternate function `a3` with pull-down
+    hwpwm_setup(pin, "a3")?;
+    Ok(())
+}
+
+
+fn set_gpio_to_pwm_other(pin: usize) -> std::io::Result<()> {
+    // Set GPIO18 to alternate function `a3` with pull-down
+    hwpwm_setup(pin, "a5")?;
+
+    Ok(())
+}
+
+fn hwpwm_setup(pin: usize, command: &str) -> std::io::Result<()> {
+    Command::new("pinctrl")
+        .args(["set", &*pin.to_string(), command, "pd"])
+        .status()
+        .expect("Failed to execute pinctrl. Are raspberry pi utils installed?\n if you need to install run the following script:\n\
+                https://raw.githubusercontent.com/Rylan-Meilutis/gpio_manager/refs/heads/main/install-utils.sh");
+
+    Ok(())
+}
 
 
 #[pyclass(eq, eq_int)]
@@ -105,6 +132,32 @@ impl PWMManager {
             1 => Channel::Pwm1,
             _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
         };
+        
+        match DeviceInfo::new().unwrap().model()  {
+            Model::RaspberryPi5 => match channel_num {
+                0 => match set_gpio_to_pwm_pi5(18) {
+                    Ok(_)=>{},
+                    Err(_) => {}
+                },
+                1 => match set_gpio_to_pwm_pi5(19) {
+                    Ok(_)=>{},
+                    Err(_) => {}
+                },
+                _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+            },
+
+            _ => match channel_num {
+                0 => match set_gpio_to_pwm_other(18) {
+                    Ok(_)=>{},
+                    Err(_) => {}
+                },
+                1 => match set_gpio_to_pwm_other(18) {
+                    Ok(_)=>{},
+                    Err(_) => {}
+                },
+                _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+            },
+        }
 
         if duty_cycle.is_some() && (duty_cycle.unwrap() > 100f64 || duty_cycle.unwrap() < 0f64) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle.unwrap())));
