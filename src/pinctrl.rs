@@ -1,10 +1,10 @@
+use libc::{ftruncate, memfd_create, off_t, MFD_ALLOW_SEALING, MFD_CLOEXEC};
 use rust_embed::RustEmbed;
+use std::ffi::CString;
+use std::fs::File;
 use std::io::Write;
 use std::os::unix::io::{FromRawFd, IntoRawFd};
 use std::process::Command;
-use libc::{memfd_create, ftruncate, MFD_CLOEXEC, MFD_ALLOW_SEALING, off_t};
-use std::ffi::CString;
-use std::fs::File;
 
 #[derive(RustEmbed)]
 #[folder = "assets/"]

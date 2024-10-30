@@ -1,3 +1,4 @@
+use crate::pinctrl;
 use crate::LogicLevel;
 use once_cell::sync::Lazy;
 use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
@@ -6,7 +7,6 @@ use rppal::system::{DeviceInfo, Model};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
-use crate::pinctrl;
 
 
 fn set_gpio_to_pwm_pi5(pin: usize) -> std::io::Result<()> {
@@ -128,27 +128,27 @@ impl PWMManager {
             1 => Channel::Pwm1,
             _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
         };
-        
-        match DeviceInfo::new().unwrap().model()  {
+
+        match DeviceInfo::new().unwrap().model() {
             Model::RaspberryPi5 => match channel_num {
                 0 => match set_gpio_to_pwm_pi5(18) {
-                    Ok(_)=>{},
-                    Err(_) => {println!("an error occurred, pin state is unknown, make sure you user is in the gpio group")}
+                    Ok(_) => {}
+                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
                 },
                 1 => match set_gpio_to_pwm_pi5(19) {
-                    Ok(_)=>{},
-                    Err(_) => {println!("an error occurred, pin state is unknown, make sure you user is in the gpio group")}
+                    Ok(_) => {}
+                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
                 },
                 _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
             },
 
             _ => match channel_num {
                 0 => match set_gpio_to_pwm_other(18) {
-                    Ok(_)=>{},
+                    Ok(_) => {}
                     Err(_) => {}
                 },
                 1 => match set_gpio_to_pwm_other(18) {
-                    Ok(_)=>{},
+                    Ok(_) => {}
                     Err(_) => {}
                 },
                 _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
