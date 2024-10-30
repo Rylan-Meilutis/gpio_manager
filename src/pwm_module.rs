@@ -11,19 +11,19 @@ use crate::pinctrl;
 
 fn set_gpio_to_pwm_pi5(pin: usize) -> std::io::Result<()> {
     // Set GPIO18 to alternate function `a3` with pull-down
-    hwpwm_setup(pin, "a3")?;
+    hw_pwm_setup(pin, "a3")?;
     Ok(())
 }
 
 
 fn set_gpio_to_pwm_other(pin: usize) -> std::io::Result<()> {
     // Set GPIO18 to alternate function `a3` with pull-down
-    hwpwm_setup(pin, "a5")?;
+    hw_pwm_setup(pin, "a5")?;
 
     Ok(())
 }
 
-fn hwpwm_setup(pin: usize, command: &str) -> std::io::Result<()> {
+fn hw_pwm_setup(pin: usize, command: &str) -> std::io::Result<()> {
     pinctrl::execute_pinctrl_in_memory(&["set", &pin.to_string(), command, "pd"]).expect("Failed to set pin");
 
     Ok(())
