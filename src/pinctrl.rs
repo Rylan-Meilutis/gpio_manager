@@ -1,14 +1,10 @@
 use libc::{ftruncate, memfd_create, off_t, MFD_ALLOW_SEALING, MFD_CLOEXEC};
-use rust_embed::RustEmbed;
 use std::ffi::CString;
 use std::fs::File;
 use std::io::Write;
 use std::os::unix::io::{FromRawFd, IntoRawFd};
 use std::process::Command;
 
-#[derive(RustEmbed)]
-#[folder = "assets/"]
-struct Asset;
 
 /// Creates an in-memory file with the contents of the `pinctrl` binary.
 fn load_pinctrl_in_memory() -> std::io::Result<File> {
@@ -26,13 +22,12 @@ fn load_pinctrl_in_memory() -> std::io::Result<File> {
     let mut memfile = unsafe { File::from_raw_fd(fd) };
 
     // Load the embedded `pinctrl` binary
-    let pinctrl_data = Asset::get("pinctrl").expect("pinctrl binary missing in assets");
-
+    let pinctrl_bytes = include_bytes!("../assets/pinctrl");
     // Write the binary data to the memory file
-    memfile.write_all(&pinctrl_data.data)?;
+    memfile.write_all(pinctrl_bytes)?;
 
     // Use ftruncate and check the return value directly
-    if unsafe { ftruncate(fd, pinctrl_data.data.len() as off_t) } != 0 {
+    if unsafe { ftruncate(fd, pinctrl_bytes.len() as off_t) } != 0 {
         return Err(std::io::Error::last_os_error());
     }
 
