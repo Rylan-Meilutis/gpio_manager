@@ -1,5 +1,5 @@
-use crate::pinctrl;
 use crate::LogicLevel;
+use crate::{check_pwm_values, pinctrl};
 use once_cell::sync::Lazy;
 use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use rppal::pwm::{Channel, Polarity, Pwm};
@@ -22,6 +22,7 @@ fn set_gpio_to_pwm_other(pin: usize) -> std::io::Result<()> {
 
     Ok(())
 }
+
 
 fn hw_pwm_setup(pin: usize, command: &str) -> std::io::Result<()> {
     pinctrl::execute_pinctrl_in_memory(&["set", &pin.to_string(), command, "pd"]).expect("Failed to set pin");
@@ -117,6 +118,8 @@ impl PWMManager {
     #[pyo3(signature = (channel_num, frequency_hz = None, duty_cycle = None, period_ms = None, pulse_width_ms = None, logic_level = LogicLevel::HIGH)
     )]
     fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms: Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
+        check_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms)?;
+
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
 
         if pwm_channels.contains_key(&channel_num) {
@@ -128,48 +131,6 @@ impl PWMManager {
             1 => Channel::Pwm1,
             _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
         };
-
-        match DeviceInfo::new().unwrap().model() {
-            Model::RaspberryPi5 => match channel_num {
-                0 => match set_gpio_to_pwm_pi5(18) {
-                    Ok(_) => {}
-                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
-                },
-                1 => match set_gpio_to_pwm_pi5(19) {
-                    Ok(_) => {}
-                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
-                },
-                _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
-            },
-
-            _ => match channel_num {
-                0 => match set_gpio_to_pwm_other(18) {
-                    Ok(_) => {}
-                    Err(_) => {}
-                },
-                1 => match set_gpio_to_pwm_other(18) {
-                    Ok(_) => {}
-                    Err(_) => {}
-                },
-                _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
-            },
-        }
-
-        if duty_cycle.is_some() && (duty_cycle.unwrap() > 100f64 || duty_cycle.unwrap() < 0f64) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle.unwrap())));
-        }
-        if period_ms.is_some() && period_ms.unwrap() < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Period must be greater than 0, The value {} does not meet this condition", period_ms.unwrap())));
-        }
-        if pulse_width_ms.is_some() && pulse_width_ms.unwrap() < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be greater than 0, The value {} does not meet this condition", pulse_width_ms.unwrap())));
-        }
-        if pulse_width_ms.is_some() && period_ms.is_some() && pulse_width_ms.unwrap() > period_ms.unwrap() {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be less than the period, The value {} does not meet this condition", pulse_width_ms.unwrap())));
-        }
-        if frequency_hz.is_some() && frequency_hz.unwrap() < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0, The value {} does not meet this condition", frequency_hz.unwrap())));
-        }
 
         let frequency = match period_ms {
             Some(period_ms) => {
@@ -219,6 +180,32 @@ impl PWMManager {
             LogicLevel::HIGH => Polarity::Normal,
             LogicLevel::LOW => Polarity::Inverse,
         };
+
+        match DeviceInfo::new().unwrap().model() {
+            Model::RaspberryPi5 => match channel_num {
+                0 => match set_gpio_to_pwm_pi5(18) {
+                    Ok(_) => {}
+                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
+                },
+                1 => match set_gpio_to_pwm_pi5(19) {
+                    Ok(_) => {}
+                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
+                },
+                _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+            },
+
+            _ => match channel_num {
+                0 => match set_gpio_to_pwm_other(18) {
+                    Ok(_) => {}
+                    Err(_) => {}
+                },
+                1 => match set_gpio_to_pwm_other(18) {
+                    Ok(_) => {}
+                    Err(_) => {}
+                },
+                _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+            },
+        }
 
         let pwm = Pwm::with_frequency(channel, frequency, duty_cycle_percent / 100f64, polarity, false)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
