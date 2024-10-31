@@ -707,7 +707,6 @@ impl GPIOManager {
             // Re-lock manager to remove the input pin
             let mut manager = self.gpio.lock().unwrap();
             manager.input_pins.remove(&pin_num);
-
         }
         // Handle output pins
         else if let Some(pin_arc) = output_pin_arc {
@@ -719,11 +718,9 @@ impl GPIOManager {
             };
             if pwm_exists {
                 if let PinType::Output(out_pin) = &pin_arc.pin {
-
                     let mut pin = out_pin.lock().unwrap();
                     pin.clear_pwm().expect("Failed to clear pwm");
                     drop(pin);
-
                 }
                 drop(pin_arc);
 
