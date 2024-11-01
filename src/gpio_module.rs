@@ -330,7 +330,10 @@ impl GPIOManager {
         check_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms)?;
 
         let mut manager = self.gpio.lock().unwrap();
-        if self.is_input_pin(pin_num, &manager) {
+
+        if let Some(_) = manager.pwm_setup.get(&pin_num) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin already configured for PWM"));
+        } else if self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin)"));
         } else if self.is_output_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in output pins (pin is already setup as an output pin)"));
@@ -347,11 +350,6 @@ impl GPIOManager {
 
             manager = self.gpio.lock().unwrap();
         }
-
-        if let Some(_) = manager.pwm_setup.get(&pin_num) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin already configured for PWM"));
-        }
-
 
         let frequency = match period_ms {
             Some(period_ms) => {
@@ -391,7 +389,7 @@ impl GPIOManager {
                 if pulse_width_ms.is_some() {
                     duty_cycle_percent
                 } else {
-                    1000f64
+                    0f64
                 }
             }
         };

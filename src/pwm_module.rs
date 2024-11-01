@@ -138,6 +138,7 @@ impl PWMManager {
             }
             None => { -1f64 }
         };
+
         let frequency = match frequency_hz {
             Some(frequency) => {
                 frequency
@@ -150,6 +151,7 @@ impl PWMManager {
                 }
             }
         };
+
         let duty_cycle_percent = match pulse_width_ms {
             Some(pulse_width) => {
                 if frequency > 0f64 {
@@ -167,7 +169,7 @@ impl PWMManager {
                 if pulse_width_ms.is_some() {
                     duty_cycle_percent
                 } else {
-                    1000f64
+                    0f64
                 }
             }
         };
