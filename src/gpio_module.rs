@@ -1,4 +1,4 @@
-use crate::{InternPullResistorState, LogicLevel, Pin, PinManager, PinState, PinType, PwmConfig, TriggerEdge};
+use crate::{check_pwm_values, InternPullResistorState, LogicLevel, Pin, PinManager, PinState, PinType, PwmConfig, TriggerEdge};
 use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
@@ -327,23 +327,13 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num, frequency_hz = None, duty_cycle = None, period_ms = None, pulse_width_ms = None, logic_level = LogicLevel::HIGH)
     )]
     fn setup_pwm(&self, pin_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms: Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
-        if duty_cycle.is_some() && (duty_cycle.unwrap() > 100f64 || duty_cycle.unwrap() < 0f64) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle.unwrap())));
-        }
-        if period_ms.is_some() && period_ms.unwrap() < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Period must be greater than 0, The value {} does not meet this condition", period_ms.unwrap())));
-        }
-        if pulse_width_ms.is_some() && pulse_width_ms.unwrap() < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be greater than 0, The value {} does not meet this condition", pulse_width_ms.unwrap())));
-        }
-        if pulse_width_ms.is_some() && period_ms.is_some() && pulse_width_ms.unwrap() > period_ms.unwrap() {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Pulse width must be less than the period, The value {} does not meet this condition", pulse_width_ms.unwrap())));
-        }
-        if frequency_hz.is_some() && frequency_hz.unwrap() < 0f64 {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Frequency must be greater than 0, The value {} does not meet this condition", frequency_hz.unwrap())));
-        }
+        check_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms)?;
+
         let mut manager = self.gpio.lock().unwrap();
-        if self.is_input_pin(pin_num, &manager) {
+
+        if let Some(_) = manager.pwm_setup.get(&pin_num) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin already configured for PWM"));
+        } else if self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin)"));
         } else if self.is_output_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in output pins (pin is already setup as an output pin)"));
@@ -360,11 +350,6 @@ impl GPIOManager {
 
             manager = self.gpio.lock().unwrap();
         }
-
-        if let Some(_) = manager.pwm_setup.get(&pin_num) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin already configured for PWM"));
-        }
-
 
         let frequency = match period_ms {
             Some(period_ms) => {
@@ -404,7 +389,7 @@ impl GPIOManager {
                 if pulse_width_ms.is_some() {
                     duty_cycle_percent
                 } else {
-                    1000f64
+                    0f64
                 }
             }
         };
