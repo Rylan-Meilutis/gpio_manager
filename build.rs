@@ -21,15 +21,6 @@ fn main() {
     // Build pinctrl from the utils repo
     println!("Building pinctrl...");
 
-    match Command::new("apt-get").args(&["install", "-y", "cmake", "device-tree-compiler", "libfdt-dev"]).status()
-    {
-        Ok(_) => {}
-        Err(_) => {
-            eprintln!("Failed to install dependencies. Please make sure you have the following packages installed:");
-            eprintln!("cmake, device-tree-compiler, libfdt-dev");
-        }
-    }
-
     Command::new("cmake")
         .arg("CMakeLists.txt")
         .current_dir(repo_dir)
