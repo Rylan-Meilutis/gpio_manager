@@ -23,7 +23,7 @@ Methods
 
    **Parameters**:
 
-   - `bus` (Optional[int]): The I2C bus number to open (default is 1).
+   - `bus` (Optional[int]): The I2C bus number to open. **Default**: 1.
 
    **Example**::
 

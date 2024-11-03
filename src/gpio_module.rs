@@ -182,15 +182,15 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.assign_callback(18, gpio_manager.TriggerEdge.FALLING, button_callback)```
     ///
-    #[pyo3(signature = (pin_num, callback, trigger_edge = TriggerEdge::BOTH, args = None, debounce_time_ms = 2))]
+    #[pyo3(signature = (pin_num, callback, trigger_edge = TriggerEdge::BOTH, debounce_time_ms = 2, args = None))]
     fn assign_callback(
         &self,
         py: Python,
         pin_num: u8,
         callback: PyObject,
         trigger_edge: TriggerEdge,
-        args: Option<&Bound<'_, PyTuple>>, // Using Option to allow args to be None
         debounce_time_ms: u64,
+        args: Option<&Bound<'_, PyTuple>>, // Using Option to allow args to be None
     ) -> PyResult<()> {
 
         // check if the pin has an async interrupt already
@@ -632,20 +632,25 @@ impl GPIOManager {
     }
 
     /// wait for an edge on the assigned pin
-    #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = -1))]
-    fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: i64) -> PyResult<()> {
+    #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = None))]
+    fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: Option<i64>) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
 
         if !self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
 
-
-        let timeout = if timeout_ms < 0 {
-            None
-        } else {
-            Some(Duration::from_millis(timeout_ms as u64))
+        let timeout = match timeout_ms{
+            None => None,
+            Some(timeout_ms) => {
+                if timeout_ms < 0 {
+                    None
+                } else {
+                    Some(Duration::from_millis(timeout_ms as u64))
+                }
+            }
         };
+
         if let Some(pin_arc) = manager.input_pins.get(&pin_num) {
             let pin_arc = pin_arc.lock().unwrap();
             let trigger = match trigger_edge {

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 
 class GPIOManager:
@@ -20,7 +20,7 @@ class GPIOManager:
         ...
 
     def assign_callback(self, pin_num: int, callback: Callable, trigger_edge: Optional[TriggerEdge] = TriggerEdge.BOTH,
-                        args: Optional[Tuple] = None, debounce_time_ms: Optional[int] = 2) -> None:
+                        debounce_time_ms: Optional[int] = 2, args: Optional[Tuple] = None) -> None:
         """
         Assigns a callback to an input pin.
 
@@ -69,9 +69,11 @@ class GPIOManager:
         """
         ...
 
-    def wait_for_edge(self, pin_num: int, trigger_edge: Optional[TriggerEdge] = TriggerEdge.BOTH, timeout_ms: Optional[int] = -1) -> None:
+    def wait_for_edge(self, pin_num: int, trigger_edge: Optional[TriggerEdge] = TriggerEdge.BOTH, timeout_ms:
+    Optional[int] = None) -> None:
         """
-        Waits for an edge on the assigned pin. This function block for the given timeout, or waits forever if it is set to a negative number.
+        Waits for an edge on the assigned pin. This function block for the given timeout, or waits forever if it is 
+        set to a negative number or None.
 
         :param pin_num: The GPIO pin.
         :param trigger_edge: The trigger type (set using gpio_manager.TriggerEdge.[RISING, FALLING, BOTH]).

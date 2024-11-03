@@ -28,13 +28,13 @@ Methods
        GPIO_manager = gpio_manager.GPIOManager()
 
 - **add_input_pin**:
-   Sets up an input pin without assigning a callback.
+   Sets a pin as an input pin.
 
    **Parameters**:
 
    - `pin_num` (int): The GPIO pin to configure as input.
-   - `pull_resistor_state` (Optional[InternPullResistorState]): Pull resistor state (PULLUP, PULLDOWN, EXTERNAL, AUTO).
-   - `logic_level` (Optional[LogicLevel]): The logic level of the pin (HIGH, LOW).
+   - `pull_resistor_state` (Optional[InternPullResistorState]): Pull resistor state (PULLUP, PULLDOWN, EXTERNAL, AUTO). **Default**: AUTO.
+   - `logic_level` (Optional[LogicLevel]): The logic level of the pin (HIGH, LOW). **Default**: HIGH.
 
    **Example**::
 
@@ -47,10 +47,11 @@ Methods
    **Parameters**:
 
    - `pin_num` (int): The GPIO pin.
-   - `callback` (Optional[Callable]): The function to invoke on pin change.
-   - `trigger_edge` (Optional[TriggerEdge]): The edge trigger (RISING, FALLING, BOTH).
-   - `args` (Optional[Tuple]): Arguments to pass to the callback function.
-   - `debounce_time_ms` (Optional[int]): Debounce time in milliseconds.
+   - `callback` (Callable): The function to invoke on pin change.
+   - `trigger_edge` (Optional[TriggerEdge]): The edge trigger (RISING, FALLING, BOTH). **Default**: BOTH.
+   - `debounce_time_ms` (Optional[int]): Debounce time in milliseconds. **Default**: 2.
+   - `args` (Optional[Tuple]): Arguments to pass to the callback function. **Default**: None.
+
 
    **Example**::
 
@@ -63,8 +64,8 @@ Methods
    **Parameters**:
 
    - `pin_num` (int): The GPIO pin to configure as output.
-   - `pin_state` (Optional[PinState]): Initial state of the pin (HIGH, LOW).
-   - `logic_level` (Optional[LogicLevel]): Logic level of the pin (HIGH, LOW).
+   - `pin_state` (Optional[PinState]): Initial state of the pin (HIGH, LOW). **Default**: LOW.
+   - `logic_level` (Optional[LogicLevel]): Logic level of the pin (HIGH, LOW). **Default**: HIGH.
 
    **Example**::
 
@@ -114,8 +115,8 @@ Methods
    **Parameters**:
 
    - `pin_num` (int): The GPIO pin.
-   - `trigger_edge` (Optional[TriggerEdge]): Trigger type (RISING, FALLING, BOTH).
-   - `timeout_ms` (Optional[int]): Timeout in milliseconds.
+   - `trigger_edge` (Optional[TriggerEdge]): Trigger type (RISING, FALLING, BOTH). **Default**: BOTH.
+   - `timeout_ms` (Optional[int]): Timeout in milliseconds. **Default**: None.
 
    **Example**::
 
@@ -125,14 +126,17 @@ Methods
 - **setup_pwm**:
    Sets up a PWM signal on the given pin. The pin must be set up as an output pin before calling this function.
 
+   (Note) frequency_hz and period_ms are mutually exclusive. duty_cycle and pulse_width_ms are also mutually exclusive.
+   If frequency_hz is set, period_ms will be ignored. If duty_cycle is set, pulse_width_ms will be ignored.
+
    **Parameters**:
 
    - `pin_num` (int): The GPIO pin.
-   - `frequency_hz` (Optional[float]): Frequency of the PWM signal in Hertz.
-   - `duty_cycle` (Optional[float]): Duty cycle as a percentage.
-   - `period_ms` (Optional[float]): PWM period in milliseconds.
-   - `pulse_width_ms` (Optional[float]): Pulse width in milliseconds.
-   - `logic_level` (Optional[LogicLevel]): The logic level of the PWM signal (HIGH, LOW).
+   - `frequency_hz` (Optional[float]): Frequency of the PWM signal in Hertz. **Default**: 1000.
+   - `duty_cycle` (Optional[float]): Duty cycle as a percentage. **Default**: 0.
+   - `period_ms` (Optional[float]): PWM period in milliseconds. **Default**: 1.
+   - `pulse_width_ms` (Optional[float]): Pulse width in milliseconds. **Default**: 0.
+   - `logic_level` (Optional[LogicLevel]): The logic level of the PWM signal (HIGH, LOW). **Default**: HIGH.
 
    **Example**::
 
