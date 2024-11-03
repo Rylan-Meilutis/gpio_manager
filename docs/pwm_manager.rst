@@ -28,22 +28,22 @@ Methods
 - **setup_pwm_channel**:
    Sets up a PWM channel with the specified parameters.
     The value of frequency_hz and duty_cycle overwrites period_ms and pulse_width_ms if they are set.
-    If neither frequency_hz and duty_cycle nor period_ms and pulse_width_ms are set, the default value of 1000 hz
-    and a duty_cycle of 0 are used.
+    If neither frequency_hz or period_ms are set, the default value of 1000 hz is used.
+    if neither duty_cycle or pulse_width_ms are set, the default value of 0% is used.
 
    **Parameters**:
 
    - `channel_num` (int): The PWM channel number (0 or 1).
 
-   - `frequency_hz` (Optional[float]): Frequency in Hertz.
+   - `frequency_hz` (Optional[float]): Frequency in Hertz. **Default**: 1000.
 
-   - `duty_cycle` (Optional[float]): Duty cycle as a percentage (0-100).
+   - `duty_cycle` (Optional[float]): Duty cycle as a percentage (0-100). **Default**: 0.
 
-   - `period_ms` (Optional[float]): Period in milliseconds.
+   - `period_ms` (Optional[float]): Period in milliseconds. **Default**: 1.
 
-   - `pulse_width_ms` (Optional[float]): Pulse width in milliseconds.
+   - `pulse_width_ms` (Optional[float]): Pulse width in milliseconds. **Default**: 0.
 
-   - `logic_level` (Optional[LogicLevel]): Logic level of the PWM signal (HIGH, LOW).
+   - `logic_level` (Optional[LogicLevel]): Logic level of the PWM signal (HIGH, LOW). **Default**: HIGH.
 
    **Example**::
 

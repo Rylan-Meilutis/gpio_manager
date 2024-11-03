@@ -16,7 +16,7 @@ Enum representing the GPIO pin state types for input pins.
   Doesn't use the internal pull resistor.
 
 - **AUTO**:
-  Automatically picks the pull resistor based on the pin logic level (Default).
+  Automatically picks the internal pull resistor based on the pin logic level (logic high = pulldown, logic low = pullup) (Default).
 
 PinState
 --------
