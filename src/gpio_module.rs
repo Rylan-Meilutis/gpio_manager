@@ -1,5 +1,5 @@
 use crate::pwm_module::PWMManager;
-use crate::{check_pwm_values, InternPullResistorState, LogicLevel, Pin, PinManager, PinState, PinType, PwmConfig, TriggerEdge};
+use crate::{check_pwm_values, compute_pwm_values, InternPullResistorState, LogicLevel, Pin, PinManager, PinState, PinType, PwmConfig, TriggerEdge};
 use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
@@ -377,48 +377,7 @@ impl GPIOManager {
             manager = self.gpio.lock().unwrap();
         }
 
-        let frequency = match period_ms {
-            Some(period_ms) => {
-                1f64 / (period_ms / 1000f64)
-            }
-            None => { -1f64 }
-        };
-
-        let frequency = match frequency_hz {
-            Some(frequency) => {
-                frequency
-            }
-            None => {
-                if period_ms.is_some() {
-                    frequency
-                } else {
-                    1000f64
-                }
-            }
-        };
-
-        let duty_cycle_percent = match pulse_width_ms {
-            Some(pulse_width) => {
-                if frequency > 0f64 {
-                    (pulse_width / (1f64 / frequency * 1000f64)) * 100f64
-                } else { 0f64 }
-            }
-            None => { -1f64 }
-        };
-
-
-        let duty_cycle_percent = match duty_cycle {
-            Some(duty_cycle) => {
-                duty_cycle
-            }
-            None => {
-                if pulse_width_ms.is_some() {
-                    duty_cycle_percent
-                } else {
-                    0f64
-                }
-            }
-        };
+        let (frequency, duty_cycle_percent) = compute_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms);
 
         if pulse_width_ms.is_some() && pulse_width_ms.unwrap() / 1000f64 > 1f64 / frequency {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pulse width must be less than period (pwm not setup"));

@@ -10,7 +10,57 @@ use rppal::gpio::{InputPin, OutputPin};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
+pub fn compute_pwm_values(frequency_hz: &Option<f64>, duty_cycle: &Option<f64>, period_ms: &Option<f64>, pulse_width_ms: &Option<f64>) -> (f64, f64) {
+    let frequency_hz = frequency_hz.clone();
+    let duty_cycle = duty_cycle.clone();
+    let period_ms = period_ms.clone();
+    let pulse_width_ms = pulse_width_ms.clone();
 
+    let frequency = match period_ms {
+        Some(period_ms) => {
+            1f64 / (period_ms / 1000f64)
+        }
+        None => { -1f64 }
+    };
+
+    let frequency = match frequency_hz {
+        Some(frequency) => {
+            frequency
+        }
+        None => {
+            if period_ms.is_some() {
+                frequency
+            } else {
+                1000f64
+            }
+        }
+    };
+
+    let duty_cycle_percent = match pulse_width_ms {
+        Some(pulse_width) => {
+            if frequency > 0f64 {
+                (pulse_width / (1f64 / frequency * 1000f64)) * 100f64
+            } else { 0f64 }
+        }
+        None => { -1f64 }
+    };
+
+
+    let duty_cycle_percent = match duty_cycle {
+        Some(duty_cycle) => {
+            duty_cycle
+        }
+        None => {
+            if pulse_width_ms.is_some() {
+                duty_cycle_percent
+            } else {
+                0f64
+            }
+        }
+    };
+
+    (frequency, duty_cycle_percent)
+}
 pub fn check_pwm_values(frequency_hz: &Option<f64>, duty_cycle: &Option<f64>, period_ms: &Option<f64>, pulse_width_ms: &Option<f64>) -> PyResult<()> {
     if duty_cycle.is_some() && (duty_cycle.unwrap() > 100f64 || duty_cycle.unwrap() < 0f64) {
         return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!("Duty cycle must be between 0 and 100, The value {} does not meet this condition", duty_cycle.unwrap())));
