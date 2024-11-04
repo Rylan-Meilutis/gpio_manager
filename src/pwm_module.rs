@@ -133,8 +133,6 @@ impl PWMManager {
     )]
     fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms:
     Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
-        check_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms)?;
-
         let gpio_manager = GPIOManager::new_rust_reference();
         let manager = gpio_manager.get_manager();
         let manager = manager.lock().unwrap();
@@ -152,6 +150,7 @@ impl PWMManager {
         drop(manager);
         drop(gpio_manager);
 
+        check_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms)?;
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
 
         if pwm_channels.contains_key(&channel_num) {
