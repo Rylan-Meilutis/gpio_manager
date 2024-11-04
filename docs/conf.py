@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('..'))  # Add the project root to the path
 project = 'gpio-manager'
 copyright = '2024, Rylan Meilutis'
 author = 'Rylan Meilutis'
-release = '2.1.20'
+release = '2.1.21'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
