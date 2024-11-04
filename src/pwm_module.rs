@@ -1,5 +1,6 @@
-use crate::LogicLevel;
+use crate::gpio_module::GPIOManager;
 use crate::{check_pwm_values, pinctrl};
+use crate::LogicLevel;
 use once_cell::sync::Lazy;
 use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use rppal::pwm::{Channel, Polarity, Pwm};
@@ -75,7 +76,7 @@ pub struct PWMManager {
 
 impl PWMManager {
     /// Internal method to initialize the PWMManager singleton.
-    fn new_singleton() -> PyResult<Self> {
+    pub fn new_singleton() -> PyResult<Self> {
         Ok(Self {
             pwm_channels: Arc::new(Mutex::new(HashMap::new())),
         })
@@ -86,6 +87,15 @@ impl PWMManager {
         Py::new(py, PWMManager {
             pwm_channels: Arc::clone(&manager.pwm_channels),
         })
+    }
+
+    pub fn is_pin_pwm(&self, pin_num: u8) -> bool {
+        let pwm_channels = self.pwm_channels.lock().unwrap();
+        match pin_num {
+            18 => { if let Some(_) = pwm_channels.get(&pin_num) { true } else { false } }
+            19 => { if let Some(_) = pwm_channels.get(&pin_num) { true } else { false } }
+            _ => false,
+        }
     }
 }
 
@@ -119,6 +129,18 @@ impl PWMManager {
     )]
     fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms: Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
         check_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms)?;
+
+        let gpio_manager = GPIOManager::new_singleton().expect("Failed to initialize GPIOManager");
+        let manager = gpio_manager.get_manager().lock().unwrap();
+
+        if gpio_manager.is_input_pin(channel_num, &manager) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin is already in use as an input pin"));
+        } else if gpio_manager.is_output_pin(channel_num, &manager) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin is already in use as an output pin"));
+        }
+
+        drop(manager);
+        drop(gpio_manager);
 
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
 
