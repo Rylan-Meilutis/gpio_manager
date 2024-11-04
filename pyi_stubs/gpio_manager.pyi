@@ -1,6 +1,3 @@
-from typing import Optional, Tuple
-
-
 class GPIOManager:
     """GPIOManager provides methods to manage GPIO pins and register callbacks."""
 
@@ -32,7 +29,7 @@ class GPIOManager:
         """
         ...
 
-    def add_output_pin(self, pin_num: int, pin_state: Optional[PINState] = PINState.LOW,
+    def add_output_pin(self, pin_num: int, pin_state: Optional[PinState] = PinState.LOW,
                        logic_level: Optional[LogicLevel] = LogicLevel.HIGH) -> None:
         """
         Sets up an output pin.
@@ -43,7 +40,7 @@ class GPIOManager:
         """
         ...
 
-    def set_output_pin(self, pin_num: int, pin_state: PINState) -> None:
+    def set_output_pin(self, pin_num: int, pin_state: PinState) -> None:
         """
         Sets the state of an output pin.
 
@@ -52,7 +49,7 @@ class GPIOManager:
         """
         ...
 
-    def get_pin(self, pin_num: int) -> PINState:
+    def get_pin(self, pin_num: int) -> PinState:
         """
         Polls the current state of an input pin.
 

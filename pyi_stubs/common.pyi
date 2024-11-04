@@ -1,3 +1,5 @@
+from typing import Optional, Tuple, Callable
+
 class InternPullResistorState:
     """Enum representing the GPIO pin state types for input pins."""
     PULLUP: 'InternPullResistorState'
@@ -20,11 +22,11 @@ class InternPullResistorState:
 
 class PinState:
     """Enum representing the GPIO pin state types for output pins. The state represents the logic state of the pin. The voltage will be set based on the logic level."""
-    HIGH: 'OPinState'
+    HIGH: 'PinState'
     """
     Sets the pin to Logic HIGH.
     """
-    LOW: 'OPinState'
+    LOW: 'PinState'
     """
     Sets the pin to Logic LOW.
     """

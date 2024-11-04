@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class PWMManager:
     """PWMManager provides methods to manage PWM channels."""
 
