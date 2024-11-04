@@ -11,10 +11,6 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 pub fn compute_pwm_values(frequency_hz: &Option<f64>, duty_cycle: &Option<f64>, period_ms: &Option<f64>, pulse_width_ms: &Option<f64>) -> (f64, f64) {
-    let frequency_hz = frequency_hz.clone();
-    let duty_cycle = duty_cycle.clone();
-    let period_ms = period_ms.clone();
-    let pulse_width_ms = pulse_width_ms.clone();
 
     let frequency = match period_ms {
         Some(period_ms) => {
@@ -25,11 +21,11 @@ pub fn compute_pwm_values(frequency_hz: &Option<f64>, duty_cycle: &Option<f64>, 
 
     let frequency = match frequency_hz {
         Some(frequency) => {
-            frequency
+            frequency.clone()
         }
         None => {
             if period_ms.is_some() {
-                frequency
+                frequency.clone()
             } else {
                 1000f64
             }
@@ -48,7 +44,7 @@ pub fn compute_pwm_values(frequency_hz: &Option<f64>, duty_cycle: &Option<f64>, 
 
     let duty_cycle_percent = match duty_cycle {
         Some(duty_cycle) => {
-            duty_cycle
+            duty_cycle.clone()
         }
         None => {
             if pulse_width_ms.is_some() {
