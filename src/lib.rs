@@ -30,7 +30,7 @@ pub fn check_pwm_values(frequency_hz: &Option<f64>, duty_cycle: &Option<f64>, pe
     Ok(())
 }
 
-struct PinManager {
+pub struct PinManager {
     input_pins: HashMap<u8, Arc<Mutex<Pin>>>,
     output_pins: HashMap<u8, Arc<Mutex<Pin>>>,
     callbacks: HashMap<u8, PyObject>,
