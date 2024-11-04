@@ -1,3 +1,26 @@
+"""
+gpio_manager
+
+A comprehensive library for managing GPIO operations, including input/output control,
+PWM management, I2C communication, and support for edge-triggered callbacks with debounce.
+Suitable for Raspberry Pi and other compatible GPIO-enabled devices.
+
+Classes:
+- GPIOManager: Manages GPIO pins, including input and output configurations, and supports
+               callback assignments.
+- PWMManager: Controls Pulse Width Modulation (PWM) functionality for GPIO pins.
+- I2CManager: Provides I2C communication functions for interacting with I2C devices.
+- Enums: Defines enums such as PinState, LogicLevel, InternPullResistorState, and TriggerEdge
+         for easy configuration of pin states and edge triggers.
+
+Example usage:
+    from gpio_manager import GPIOManager
+    gpio = GPIOManager()
+    gpio.add_input_pin(pin_num=4)
+    gpio.assign_callback(pin_num=4, callback=my_callback)
+"""
+
+
 class InternPullResistorState:
     """Enum representing the GPIO pin state types for input pins."""
     PULLUP: 'InternPullResistorState'
