@@ -1,3 +1,5 @@
+from typing import Optional, Tuple, Callable
+
 class InternPullResistorState:
     """Enum representing the GPIO pin state types for input pins."""
     PULLUP: 'InternPullResistorState'
