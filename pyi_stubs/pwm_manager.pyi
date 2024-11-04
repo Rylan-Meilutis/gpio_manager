@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class PWMManager:
     """PWMManager provides methods to manage PWM channels."""
 
@@ -8,8 +5,9 @@ class PWMManager:
         """Initializes a new PWMManager instance."""
         ...
 
-    def setup_pwm_channel(self, channel_num: int, frequency_hz: Optional[float] = None, duty_cycle: Optional[float] = None,
-                          period_ms: Optional[float] = None, pulse_width_ms: Optional[float] = None,
+    def setup_pwm_channel(self, channel_num: int, frequency_hz: Optional[float] = None,
+                          duty_cycle: Optional[float] = None, period_ms: Optional[float] = None,
+                          pulse_width_ms: Optional[float] = None,
                           logic_level: Optional['LogicLevel'] = LogicLevel.HIGH) -> None:
         """
         Sets up a PWM channel with the specified parameters.

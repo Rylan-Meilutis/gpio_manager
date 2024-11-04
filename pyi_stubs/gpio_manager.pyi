@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable
 
 
 class GPIOManager:
@@ -8,7 +8,8 @@ class GPIOManager:
         """Initializes a new GPIOManager instance."""
         ...
 
-    def add_input_pin(self, pin_num: int, pull_resistor_state: Optional[InternPullResistorState] = InternPullResistorState.AUTO,
+    def add_input_pin(self, pin_num: int,
+                      pull_resistor_state: Optional[InternPullResistorState] = InternPullResistorState.AUTO,
                       logic_level: Optional[LogicLevel] = LogicLevel.HIGH) -> None:
         """
         Sets up an input pin but does not assign a callback yet.
@@ -19,8 +20,8 @@ class GPIOManager:
         """
         ...
 
-    def assign_callback(self, pin_num: int, callback: Callable, trigger_edge: Optional[TriggerEdge] = TriggerEdge.BOTH,
-                        debounce_time_ms: Optional[int] = 2, args: Optional[Tuple] = None) -> None:
+    def assign_callback(self, pin_num: int, callback: Callable[[], None], trigger_edge: Optional[TriggerEdge] =
+    TriggerEdge.BOTH, debounce_time_ms: Optional[int] = 2, args: Optional[Tuple] = None) -> None:
         """
         Assigns a callback to an input pin.
 
@@ -32,7 +33,7 @@ class GPIOManager:
         """
         ...
 
-    def add_output_pin(self, pin_num: int, pin_state: Optional[PINState] = PINState.LOW,
+    def add_output_pin(self, pin_num: int, pin_state: Optional[PinState] = PinState.LOW,
                        logic_level: Optional[LogicLevel] = LogicLevel.HIGH) -> None:
         """
         Sets up an output pin.
@@ -43,7 +44,7 @@ class GPIOManager:
         """
         ...
 
-    def set_output_pin(self, pin_num: int, pin_state: PINState) -> None:
+    def set_output_pin(self, pin_num: int, pin_state: PinState) -> None:
         """
         Sets the state of an output pin.
 
@@ -52,7 +53,7 @@ class GPIOManager:
         """
         ...
 
-    def get_pin(self, pin_num: int) -> PINState:
+    def get_pin(self, pin_num: int) -> PinState:
         """
         Polls the current state of an input pin.
 
@@ -81,7 +82,8 @@ class GPIOManager:
         """
         ...
 
-    def setup_pwm(self, pin_num, frequency_hz: Optional[float] = None, duty_cycle: Optional[float] = None, period_ms: Optional[float] = None,
+    def setup_pwm(self, pin_num, frequency_hz: Optional[float] = None, duty_cycle: Optional[float] = None,
+                  period_ms: Optional[float] = None,
                   pulse_width_ms: Optional[float] = None, logic_level: Optional[LogicLevel] = LogicLevel.HIGH) -> None:
         """
         Sets up a PWM signal on the given pin. If The pin must be set up as an output pin before calling this

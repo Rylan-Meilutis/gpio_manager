@@ -1,6 +1,3 @@
-from typing import Optional
-
-
 class I2CManager:
     """I2CManager provides methods to manage I2C communication."""
 

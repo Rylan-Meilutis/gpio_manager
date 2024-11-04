@@ -1,3 +1,4 @@
+use crate::pwm_module::PWMManager;
 use crate::{check_pwm_values, InternPullResistorState, LogicLevel, Pin, PinManager, PinState, PinType, PwmConfig, TriggerEdge};
 use once_cell::sync::Lazy;
 use pyo3::prelude::*;
@@ -48,6 +49,9 @@ impl GPIOManager {
             })),
         })
     }
+    pub fn get_manager(&self) -> Arc<Mutex<PinManager>> {
+        Arc::clone(&self.gpio)
+    }
 
     fn shared(py: Python) -> PyResult<Py<GPIOManager>> {
         let manager = GPIO_MANAGER.lock().unwrap();
@@ -57,11 +61,18 @@ impl GPIOManager {
         })
     }
 
-    fn is_input_pin(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
+    pub fn new_rust_reference() -> GPIOManager {
+        let manager = GPIO_MANAGER.lock().unwrap();
+        GPIOManager {
+            gpio: Arc::clone(&manager.gpio),
+        }
+    }
+
+    pub fn is_input_pin(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
         manager.input_pins.get(&pin_num).is_some()
     }
 
-    fn is_output_pin(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
+    pub fn is_output_pin(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
         manager.output_pins.get(&pin_num).is_some()
     }
 
@@ -103,6 +114,12 @@ impl GPIOManager {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not setup for pwm"))
         }
     }
+
+    fn is_pin_pwm(&self, pin_num:u8) -> bool {
+        let pwm = PWMManager::new_rust_reference();
+        let pwm = pwm.lock().unwrap();
+        pwm.is_pin_pwm(pin_num)
+    }
 }
 
 
@@ -130,6 +147,9 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num, pull_resistor_state = InternPullResistorState::AUTO, logic_level = LogicLevel::HIGH)
     )]
     fn add_input_pin(&self, pin_num: u8, pull_resistor_state: InternPullResistorState, logic_level: LogicLevel) -> PyResult<()> {
+        if self.is_pin_pwm(pin_num) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin configured for hardware PWM, please reset the pin to use as regular input pin"));
+        }
         let mut manager = self.gpio.lock().unwrap();
         if self.is_output_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in output pins (pin is already setup as an output pin"));
@@ -284,6 +304,9 @@ impl GPIOManager {
     ///
     #[pyo3(signature = (pin_num, pin_state = PinState::LOW, logic_level = LogicLevel::HIGH))]
     fn add_output_pin(&self, pin_num: u8, pin_state: PinState, logic_level: LogicLevel) -> PyResult<()> {
+        if self.is_pin_pwm(pin_num) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin configured for hardware PWM, please reset the pin to use as regular input pin"));
+        }
         let mut manager = self.gpio.lock().unwrap();
         if self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in input pins (pin is already setup as an input pin)"));
@@ -327,6 +350,9 @@ impl GPIOManager {
     #[pyo3(signature = (pin_num, frequency_hz = None, duty_cycle = None, period_ms = None, pulse_width_ms = None, logic_level = LogicLevel::HIGH)
     )]
     fn setup_pwm(&self, pin_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms: Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
+        if self.is_pin_pwm(pin_num) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin configured for hardware PWM, please reset the pin to use as regular input pin"));
+        }
         check_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms)?;
 
         let mut manager = self.gpio.lock().unwrap();
@@ -640,7 +666,7 @@ impl GPIOManager {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
 
-        let timeout = match timeout_ms{
+        let timeout = match timeout_ms {
             None => None,
             Some(timeout_ms) => {
                 if timeout_ms < 0 {

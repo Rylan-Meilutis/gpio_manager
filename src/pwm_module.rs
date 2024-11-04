@@ -1,3 +1,4 @@
+use crate::gpio_module::GPIOManager;
 use crate::LogicLevel;
 use crate::{check_pwm_values, pinctrl};
 use once_cell::sync::Lazy;
@@ -87,6 +88,19 @@ impl PWMManager {
             pwm_channels: Arc::clone(&manager.pwm_channels),
         })
     }
+
+    pub fn new_rust_reference() -> Arc<Mutex<PWMManager>> {
+        Arc::clone(&PWM_MANAGER)
+    }
+
+    pub fn is_pin_pwm(&self, pin_num: u8) -> bool {
+        let pwm_channels = self.pwm_channels.lock().unwrap();
+        match pin_num {
+            18 => { if let Some(_) = pwm_channels.get(&0) { true } else { false } }
+            19 => { if let Some(_) = pwm_channels.get(&1) { true } else { false } }
+            _ => false,
+        }
+    }
 }
 
 
@@ -117,8 +131,26 @@ impl PWMManager {
     /// ```
     #[pyo3(signature = (channel_num, frequency_hz = None, duty_cycle = None, period_ms = None, pulse_width_ms = None, logic_level = LogicLevel::HIGH)
     )]
-    fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms: Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
+    fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms:
+    Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
         check_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms)?;
+
+        let gpio_manager = GPIOManager::new_rust_reference();
+        let manager = gpio_manager.get_manager();
+        let manager = manager.lock().unwrap();
+
+        let pin_num = match channel_num {
+            0 => 18,
+            1 => 19,
+            _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+        };
+        if gpio_manager.is_input_pin(pin_num, &manager) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin is already in use as an input pin"));
+        } else if gpio_manager.is_output_pin(pin_num, &manager) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin is already in use as an output pin"));
+        }
+        drop(manager);
+        drop(gpio_manager);
 
         let mut pwm_channels = self.pwm_channels.lock().unwrap();
 
