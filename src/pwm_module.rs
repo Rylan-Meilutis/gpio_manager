@@ -76,7 +76,7 @@ pub struct PWMManager {
 
 impl PWMManager {
     /// Internal method to initialize the PWMManager singleton.
-    pub fn new_singleton() -> PyResult<Self> {
+    fn new_singleton() -> PyResult<Self> {
         Ok(Self {
             pwm_channels: Arc::new(Mutex::new(HashMap::new())),
         })
