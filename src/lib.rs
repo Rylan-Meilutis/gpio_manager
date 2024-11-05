@@ -11,7 +11,6 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 pub fn compute_pwm_values(frequency_hz: &Option<f64>, duty_cycle: &Option<f64>, period_ms: &Option<f64>, pulse_width_ms: &Option<f64>) -> (f64, f64) {
-
     let frequency = match period_ms {
         Some(period_ms) => {
             1f64 / (period_ms / 1000f64)

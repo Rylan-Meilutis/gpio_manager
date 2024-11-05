@@ -115,7 +115,7 @@ impl GPIOManager {
         }
     }
 
-    fn is_pin_pwm(&self, pin_num:u8) -> bool {
+    fn is_pin_pwm(&self, pin_num: u8) -> bool {
         let pwm = PWMManager::new_rust_reference();
         let pwm = pwm.lock().unwrap();
         pwm.is_pin_pwm(pin_num)

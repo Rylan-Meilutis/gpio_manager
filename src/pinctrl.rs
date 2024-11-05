@@ -10,7 +10,7 @@ use std::process::Command;
 fn load_pinctrl_in_memory() -> std::io::Result<File> {
     // Create an anonymous memory file descriptor
     let fd = unsafe {
-        let name = CString::new("pinctrl_memory")?;
+        let name = CString::new("pinctrl")?;
         memfd_create(name.as_ptr(), MFD_CLOEXEC | MFD_ALLOW_SEALING)
     };
 
@@ -19,28 +19,28 @@ fn load_pinctrl_in_memory() -> std::io::Result<File> {
     }
 
     // Convert the raw fd into a Rust File
-    let mut memfile = unsafe { File::from_raw_fd(fd) };
+    let mut mem_file = unsafe { File::from_raw_fd(fd) };
 
-    // Load the embedded `pinctrl` binary
+    // Load the embedded `pin ctrl` binary
     let pinctrl_bytes = include_bytes!("../assets/pinctrl");
     // Write the binary data to the memory file
-    memfile.write_all(pinctrl_bytes)?;
+    mem_file.write_all(pinctrl_bytes)?;
 
     // Use ftruncate and check the return value directly
     if unsafe { ftruncate(fd, pinctrl_bytes.len() as off_t) } != 0 {
         return Err(std::io::Error::last_os_error());
     }
 
-    Ok(memfile)
+    Ok(mem_file)
 }
 
-/// Executes the `pinctrl` binary loaded in memory with the given arguments.
-pub fn execute_pinctrl_in_memory(args: &[&str]) -> std::io::Result<()> {
-    // Load pinctrl binary into memory
-    let memfile = load_pinctrl_in_memory()?;
+/// Executes the `pin ctrl` binary loaded in memory with the given arguments.
+pub fn execute_pinctrl(args: &[&str]) -> std::io::Result<()> {
+    // Load pin ctrl binary into memory
+    let mem_file = load_pinctrl_in_memory()?;
 
     // Use `into_raw_fd` to take ownership of the file descriptor
-    let fd = memfile.into_raw_fd();
+    let fd = mem_file.into_raw_fd();
 
     // Execute the in-memory binary
     let status = Command::new(format!("/proc/self/fd/{}", fd))
