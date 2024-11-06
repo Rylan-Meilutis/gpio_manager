@@ -48,7 +48,7 @@ class PWMManager:
         """
         ...
 
-    def set_duty_cycle(self, channel_num: int, duty_cycle: int) -> None:
+    def set_duty_cycle(self, channel_num: int, duty_cycle: float) -> None:
         """
         Sets the duty cycle for the specified PWM channel.
 
