@@ -1,6 +1,6 @@
 use crate::gpio_module::GPIOManager;
-use crate::LogicLevel;
 use crate::{check_pwm_values, pinctrl};
+use crate::{compute_pwm_values, LogicLevel};
 use once_cell::sync::Lazy;
 use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use rppal::pwm::{Channel, Polarity, Pwm};
@@ -26,7 +26,7 @@ fn set_gpio_to_pwm_other(pin: usize) -> std::io::Result<()> {
 
 
 fn hw_pwm_setup(pin: usize, command: &str) -> std::io::Result<()> {
-    pinctrl::execute_pinctrl_in_memory(&["set", &pin.to_string(), command, "pd"]).expect("Failed to set pin");
+    pinctrl::execute_pinctrl(&["set", &pin.to_string(), command, "pd"]).expect("Failed to set pin");
 
     Ok(())
 }
@@ -163,47 +163,7 @@ impl PWMManager {
             _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
         };
 
-        let frequency = match period_ms {
-            Some(period_ms) => {
-                1000f64 / period_ms
-            }
-            None => { -1f64 }
-        };
-
-        let frequency = match frequency_hz {
-            Some(frequency) => {
-                frequency
-            }
-            None => {
-                if period_ms.is_some() {
-                    frequency
-                } else {
-                    1000f64
-                }
-            }
-        };
-
-        let duty_cycle_percent = match pulse_width_ms {
-            Some(pulse_width) => {
-                if frequency > 0f64 {
-                    (pulse_width / (1f64 / frequency * 1000f64)) * 100f64
-                } else { 0f64 }
-            }
-            None => { -1f64 }
-        };
-
-        let duty_cycle_percent = match duty_cycle {
-            Some(duty_cycle) => {
-                duty_cycle
-            }
-            None => {
-                if pulse_width_ms.is_some() {
-                    duty_cycle_percent
-                } else {
-                    0f64
-                }
-            }
-        };
+        let (frequency, duty_cycle_percent) = compute_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms);
 
         if pulse_width_ms.is_some() && pulse_width_ms.unwrap() / 1000f64 > 1f64 / frequency {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pulse width must be less than period (pwm not setup"));
