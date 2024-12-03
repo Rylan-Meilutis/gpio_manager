@@ -8,7 +8,7 @@ use pyo3::{pyclass, pymethods, Py, PyErr, PyResult, Python};
 use rppal::gpio::{Gpio, Trigger};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard};
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 
 // Singleton instance of GPIOManager
@@ -202,7 +202,8 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.assign_callback(18, gpio_manager.TriggerEdge.FALLING, button_callback)```
     ///
-    #[pyo3(signature = (pin_num, callback, trigger_edge = TriggerEdge::BOTH, debounce_time_ms = 2, args = None))]
+    #[pyo3(signature = (pin_num, callback, trigger_edge = TriggerEdge::BOTH, debounce_time_ms = 2, args = None, include_trigger_time = false,
+    include_trigger_edge = false))]
     fn assign_callback(
         &self,
         py: Python,
@@ -211,6 +212,8 @@ impl GPIOManager {
         trigger_edge: TriggerEdge,
         debounce_time_ms: u64,
         args: Option<&Bound<'_, PyTuple>>, // Using Option to allow args to be None
+        include_trigger_time: bool,
+        include_trigger_edge: bool,
     ) -> PyResult<()> {
 
         // check if the pin has an async interrupt already
@@ -276,13 +279,48 @@ impl GPIOManager {
         });
 
         let mut pin = pin_arc.lock().unwrap();
-        pin.set_async_interrupt(trigger, Some(Duration::from_millis(debounce_time_ms)), move |_event| {
+        pin.set_async_interrupt(trigger, Some(Duration::from_millis(debounce_time_ms)), move |event| {
+            let edge = match event.trigger {
+                Trigger::RisingEdge => TriggerEdge::RISING,
+                Trigger::FallingEdge => TriggerEdge::FALLING,
+                _ => {
+                    eprintln!("Unknown trigger event");
+                    return;
+                }
+            };
+            let trigger_time = {
+                let now = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .expect("System time should be after Unix epoch");
+                let boot_time = now.checked_sub(event.timestamp)
+                                   .expect("Failed to calculate boot time");
+                let event_unix_time = boot_time + event.timestamp; // Add duration since boot to boot time
+                event_unix_time.as_secs_f64()
+            };
+
             // Re-acquire the GIL for calling the Python callback
             Python::with_gil(|py| {
                 let cb = py_callback_clone.clone_ref(py);
                 let args = args_arc.lock().unwrap();
 
-                if let Err(e) = cb.call1(py, args.bind(py).downcast::<PyTuple>().unwrap()) {
+                // Prepare new arguments
+                let mut new_args: Vec<PyObject> = Vec::new();
+                if include_trigger_time {
+                    new_args.push(trigger_time.to_object(py)); // Add timestamp as the first argument
+                }
+                if include_trigger_edge {
+                    new_args.push(edge.into_py(py)); // Add edge as the second argument
+                }
+                if let Ok(py_tuple) = args.downcast_bound::<PyTuple>(py) {
+                    for item in py_tuple.iter() {
+                            new_args.push(item.to_object(py));
+                    }
+                }
+
+                let new_args_tuple = PyTuple::new_bound(py, new_args);
+
+                // Call the Python callback
+                if let Err(e) = cb.call1(py, new_args_tuple) {
                     e.print(py);
                 }
             });

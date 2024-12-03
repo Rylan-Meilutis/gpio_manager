@@ -20,16 +20,21 @@ class GPIOManager:
         """
         ...
 
-    def assign_callback(self, pin_num: int, callback: Callable[[], None], trigger_edge: Optional[TriggerEdge] =
-    TriggerEdge.BOTH, debounce_time_ms: Optional[int] = 2, args: Optional[Tuple] = None) -> None:
+    def assign_callback(self, pin_num: int, callback: Callable[..., None], trigger_edge: Optional[TriggerEdge] =
+    TriggerEdge.BOTH, debounce_time_ms: Optional[int] = 2, args: Optional[Tuple] = None, include_trigger_time: Optional[bool] = False,
+                        include_trigger_edge: Optional[bool] = False) -> None:
         """
-        Assigns a callback to an input pin.
+        Assigns a callback to an input pin. If enabled, TriggerTime is a float representing the time the trigger occurred since unix time epoch. TriggerEdge is an enum representing the edge that triggered the
+        callback (gpio_manager.TriggerEdge.[RISING, FALLING]).
 
         :param pin_num: The GPIO pin.
         :param callback: The callback function to be invoked on pin change.
         :param trigger_edge: The edge trigger type (set using gpio_manager.TriggerEdge.[RISING, FALLING, BOTH]).
         :param args: The arguments to pass to the callback function.
         :param debounce_time_ms: The debounce time in milliseconds.
+        :param include_trigger_time: Whether to include the trigger time in the callback. (Will be the first argument)
+        :param include_trigger_edge: Whether to include the trigger edge in the callback. (Will be the second argument if include_trigger_time is True, otherwise the first
+        argument)
         """
         ...
 
