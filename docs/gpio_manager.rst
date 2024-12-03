@@ -42,7 +42,8 @@ Methods
        GPIO_manager.add_input_pin(pin_num=18)
 
 - **assign_callback**:
-   Assigns a callback function to an input pin.
+   Assigns a callback function to an input pin. If enabled, TriggerTime is a float representing the time the trigger occurred since unix time epoch. TriggerEdge is an enum
+   representing the edge that triggered the callback (gpio_manager.TriggerEdge.[RISING, FALLING]).
 
    **Parameters**:
 
@@ -51,6 +52,10 @@ Methods
    - `trigger_edge` (Optional[TriggerEdge]): The edge trigger (RISING, FALLING, BOTH). **Default**: BOTH.
    - `debounce_time_ms` (Optional[int]): Debounce time in milliseconds. **Default**: 2.
    - `args` (Optional[Tuple]): Arguments to pass to the callback function. **Default**: None.
+   - `include_trigger_time` (Optional[bool]): Whether to include the trigger time in the callback arguments. **Default**: False. (Note: parameter will be the first one passed to
+    the function.)
+   - `include_previous_state` (Optional[bool]): Whether to include the previous state in the callback arguments. **Default**: False. (Note: parameter will be the second one passed to
+    the function if include_trigger_time is true. Otherwise, it will be the first parameter.)
 
 
    **Example**::
