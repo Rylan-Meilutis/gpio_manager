@@ -20,7 +20,7 @@ class GPIOManager:
         """
         ...
 
-    def assign_callback(self, pin_num: int, callback: Callable[[], None], trigger_edge: Optional[TriggerEdge] =
+    def assign_callback(self, pin_num: int, callback: Callable[..., None], trigger_edge: Optional[TriggerEdge] =
     TriggerEdge.BOTH, debounce_time_ms: Optional[int] = 2, args: Optional[Tuple] = None) -> None:
         """
         Assigns a callback to an input pin.
