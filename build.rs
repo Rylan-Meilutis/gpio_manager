@@ -45,7 +45,7 @@ fn main() {
     println!("pinctrl is now available in the assets directory.");
 
     //remove the utils directory
-    fs::remove_dir_all(repo_dir).unwrap();
+    //fs::remove_dir_all(repo_dir).unwrap();
 
     let pyi_parts_dir = Path::new("pyi_stubs");
     let output_pyi = Path::new("gpio_manager.pyi");

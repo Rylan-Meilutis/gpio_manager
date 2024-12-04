@@ -43,7 +43,7 @@ Methods
 
 - **assign_callback**:
    Assigns a callback function to an input pin. If enabled, TriggerTime is a float representing the time the trigger occurred since unix time epoch. TriggerEdge is an enum
-   representing the edge that triggered the callback (gpio_manager.TriggerEdge.[RISING, FALLING]).
+   representing the edge that triggered the callback (gpio_manager.TriggerEdge.[RISING, FALLING]). You can assign multiple callbacks to the same pin.
 
    **Parameters**:
 
@@ -102,15 +102,29 @@ Methods
        current_state = GPIO_manager.get_pin(pin_num=12)
 
 - **unassign_callback**:
-   Unassigns a callback from an input pin.
+   Unassigns the provided callback from an input pin.
 
    **Parameters**:
 
-   - `pin_num` (int): The GPIO pin whose callback is to be reset.
+   - `pin_num` (int): The GPIO pin whose callback is to be reset.\
+   - `callback` (Callable): The function to remove from the pin.
+
+   **Example**::
+
+       GPIO_manager.unassign_callback(pin_num=15, callback=button_callback)
+
+
+- **unassign_callbacks**:
+   Unassigns all callbacks from an input pin.
+
+   **Parameters**:
+
+   - `pin_num` (int): The GPIO pin whose callback is to be reset.\
 
    **Example**::
 
        GPIO_manager.unassign_callback(pin_num=15)
+
 
 - **wait_for_edge**:
    Waits for an edge trigger on an input pin.

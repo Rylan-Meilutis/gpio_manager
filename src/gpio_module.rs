@@ -1,5 +1,5 @@
 use crate::pwm_module::PWMManager;
-use crate::{check_pwm_values, compute_pwm_values, InternPullResistorState, LogicLevel, Pin, PinManager, PinState, PinType, PwmConfig, TriggerEdge};
+use crate::{check_pwm_values, compute_pwm_values, Callback, InternPullResistorState, LogicLevel, Pin, PinManager, PinState, PinType, PwmConfig, TriggerEdge};
 use once_cell::sync::Lazy;
 use pyo3::prelude::*;
 use pyo3::types::PyTuple;
@@ -76,11 +76,6 @@ impl GPIOManager {
         manager.output_pins.get(&pin_num).is_some()
     }
 
-
-    fn is_callback_setup(&self, pin_num: u8, manager: &MutexGuard<PinManager>) -> bool {
-        manager.async_interrupts.get(&pin_num).is_some()
-    }
-
     fn set_pwm(&self, pwm_pin: u8) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
         if let Some(pwm_config) = manager.pwm_setup.get(&pwm_pin) {
@@ -119,6 +114,62 @@ impl GPIOManager {
         let pwm = PWMManager::new_rust_reference();
         let pwm = pwm.lock().unwrap();
         pwm.is_pin_pwm(pin_num)
+    }
+
+
+    fn input_callback(&self, pin_num: u8, event: rppal::gpio::Event) {
+        let manager = self.gpio.lock().unwrap();
+        let callbacks = manager.callbacks.get(&pin_num).unwrap();
+        let edge = match event.trigger {
+            Trigger::RisingEdge => TriggerEdge::RISING,
+            Trigger::FallingEdge => TriggerEdge::FALLING,
+            _ => {
+                eprintln!("Unknown trigger event");
+                return;
+            }
+        };
+        let trigger_time = {
+            let now = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("System time should be after Unix epoch");
+            let boot_time = now.checked_sub(event.timestamp)
+                               .expect("Failed to calculate boot time");
+            let event_unix_time = boot_time + event.timestamp; // Add duration since boot to boot time
+            event_unix_time.as_secs_f64()
+        };
+
+        // Re-acquire the GIL for calling the Python callback
+        Python::with_gil(|py| {
+            for callback in callbacks {
+                if callback.trigger_edge != TriggerEdge::BOTH && callback.trigger_edge != edge {
+                    continue;
+                }
+                let cb = callback.callable.lock().unwrap().clone_ref(py);
+                let args = &callback.args.lock().unwrap();
+
+                // Prepare new arguments
+                let mut new_args: Vec<PyObject> = Vec::new();
+
+                if callback.send_time {
+                    new_args.push(trigger_time.to_object(py)); // Add timestamp as the first argument
+                }
+                if callback.send_edge {
+                    new_args.push(edge.into_py(py)); // Add edge as the second argument
+                }
+                if let Ok(py_tuple) = args.downcast_bound::<PyTuple>(py) {
+                    for item in py_tuple.iter() {
+                        new_args.push(item.to_object(py));
+                    }
+                }
+
+                let new_args_tuple = PyTuple::new_bound(py, new_args);
+
+                // Call the Python callback
+                if let Err(e) = cb.call1(py, new_args_tuple) {
+                    e.print(py);
+                }
+            }
+        });
     }
 }
 
@@ -223,9 +274,6 @@ impl GPIOManager {
         if !self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
-        if self.is_callback_setup(pin_num, &manager) {
-            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Callback already assigned to pin"));
-        }
         drop(manager);
         let callable: &Bound<PyAny> = callback.bind(py);
         if !callable.is_callable() {
@@ -237,27 +285,24 @@ impl GPIOManager {
         let args_arc = Arc::new(Mutex::new(args.to_object(py)));
 
         let manager_clone = Arc::clone(&self.gpio);
-        Python::with_gil(|py| {
-            let py_callback_clone = callback.clone_ref(py);
-            let mut manager = manager_clone.lock().unwrap();
-            manager.callbacks.insert(pin_num, py_callback_clone);
-            drop(manager);
+        let callable = Python::with_gil(|py| {
+            callback.clone_ref(py)
         });
 
         let trigger = {
             let pin_logic_level = manager_clone.lock().unwrap().input_pins.get(&pin_num).unwrap().lock().unwrap().logic_level;
             let trigger_event = match trigger_edge {
                 TriggerEdge::RISING => if pin_logic_level == LogicLevel::HIGH {
-                    Trigger::RisingEdge
+                    TriggerEdge::RISING
                 } else {
-                    Trigger::FallingEdge
+                    TriggerEdge::FALLING
                 },
                 TriggerEdge::FALLING => if pin_logic_level == LogicLevel::HIGH {
-                    Trigger::FallingEdge
+                    TriggerEdge::FALLING
                 } else {
-                    Trigger::RisingEdge
+                    TriggerEdge::RISING
                 },
-                TriggerEdge::BOTH => Trigger::Both,
+                TriggerEdge::BOTH => TriggerEdge::BOTH,
             };
 
             trigger_event
@@ -273,62 +318,33 @@ impl GPIOManager {
             }
         };
 
-        let py_callback_clone = Python::with_gil(|py| {
-            let manager = manager_clone.lock().unwrap();
-            manager.callbacks.get(&pin_num).unwrap().clone_ref(py)
-        });
+        let callable = Arc::new(Mutex::new(callable));
+        let callback = Callback {
+            callable,
+            trigger_edge: trigger,
+            args: args_arc,
+            send_time: include_trigger_time,
+            send_edge: include_trigger_edge,
+        };
 
-        let mut pin = pin_arc.lock().unwrap();
-        pin.set_async_interrupt(trigger, Some(Duration::from_millis(debounce_time_ms)), move |event| {
-            let edge = match event.trigger {
-                Trigger::RisingEdge => TriggerEdge::RISING,
-                Trigger::FallingEdge => TriggerEdge::FALLING,
-                _ => {
-                    eprintln!("Unknown trigger event");
-                    return;
-                }
-            };
-            let trigger_time = {
-                let now = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .expect("System time should be after Unix epoch");
-                let boot_time = now.checked_sub(event.timestamp)
-                                   .expect("Failed to calculate boot time");
-                let event_unix_time = boot_time + event.timestamp; // Add duration since boot to boot time
-                event_unix_time.as_secs_f64()
-            };
-
-            // Re-acquire the GIL for calling the Python callback
-            Python::with_gil(|py| {
-                let cb = py_callback_clone.clone_ref(py);
-                let args = args_arc.lock().unwrap();
-
-                // Prepare new arguments
-                let mut new_args: Vec<PyObject> = Vec::new();
-                if include_trigger_time {
-                    new_args.push(trigger_time.to_object(py)); // Add timestamp as the first argument
-                }
-                if include_trigger_edge {
-                    new_args.push(edge.into_py(py)); // Add edge as the second argument
-                }
-                if let Ok(py_tuple) = args.downcast_bound::<PyTuple>(py) {
-                    for item in py_tuple.iter() {
-                            new_args.push(item.to_object(py));
-                    }
-                }
-
-                let new_args_tuple = PyTuple::new_bound(py, new_args);
-
-                // Call the Python callback
-                if let Err(e) = cb.call1(py, new_args_tuple) {
-                    e.print(py);
-                }
-            });
-        }).expect("Error setting up async interrupt");
         let mut manager = manager_clone.lock().unwrap();
-        manager.async_interrupts.insert(pin_num, true);
-        drop(manager);
+        if let Some(callback_vec) = manager.callbacks.get_mut(&pin_num) {
+            callback_vec.push(callback);
+        } else {
+            manager.callbacks.insert(pin_num, vec![callback]);
+        }
+        let callbacks_set = manager.async_interrupts.get(&pin_num).is_some();
+        if !callbacks_set {
+            let mut pin = pin_arc.lock().unwrap();
+            pin.set_async_interrupt(Trigger::Both, Some(Duration::from_millis(debounce_time_ms)), move |event| {
+                let manager = GPIOManager::new_rust_reference();
+                // Call input_callback using the locked manager
+                manager.input_callback(pin_num, event);
+            }).expect("Error setting up async interrupt");
 
+            manager.async_interrupts.insert(pin_num, true);
+        }
+        drop(manager);
         Ok(())
     }
 
@@ -633,7 +649,7 @@ impl GPIOManager {
     /// ```state = manager.poll_pin(18)```
     ///
     #[pyo3(signature = (pin_num))]
-    fn unassign_callback(&self, pin_num: u8) -> PyResult<()> {
+    fn unassign_callbacks(&self, pin_num: u8) -> PyResult<()> {
         let mut manager = self.gpio.lock().unwrap();
 
         if !self.is_input_pin(pin_num, &manager) {
@@ -651,6 +667,37 @@ impl GPIOManager {
 
         manager.async_interrupts.remove(&pin_num);
         manager.callbacks.remove(&pin_num);
+        Ok(())
+    }
+
+
+    #[pyo3(signature = (pin_num, callback))]
+    fn unassign_callback(&self, py: Python, pin_num: u8, callback: PyObject) -> PyResult<()> {
+        let mut manager = self.gpio.lock().unwrap();
+        let callable: &Bound<PyAny> = callback.bind(py);
+        if !callable.is_callable() {
+            return Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>("Object is not callable"));
+        }
+
+        if !self.is_input_pin(pin_num, &manager) {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
+        }
+        let callbacks = manager.callbacks.get_mut(&pin_num).unwrap();
+        let mut index = 0;
+        for (i, callable) in callbacks.iter().enumerate() {
+            let cb = callable.callable.lock().unwrap(); // Unlock the mutex to access the PyObject
+            Python::with_gil(|_| {
+                if cb.is(&callback) {
+                    index = i;
+                    return;
+                }
+            });
+        }
+        callbacks.remove(index);
+        if callbacks.is_empty() {
+            self.unassign_callbacks(pin_num)?;
+        }
+
         Ok(())
     }
 
@@ -716,7 +763,7 @@ impl GPIOManager {
 
         // Handle input pins
         if let Some(_) = input_pin_arc {
-            self.unassign_callback(pin_num)?;
+            self.unassign_callbacks(pin_num)?;
             // Re-lock manager to remove the input pin
             let mut manager = self.gpio.lock().unwrap();
             manager.input_pins.remove(&pin_num);
