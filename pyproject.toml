@@ -5,6 +5,8 @@ description = "Rust bindings for the rppal crate to manage GPIO pins on a Raspbe
 readme = "info.md"
 requires-python = ">=3.8"
 
+metadata-version = "2.3"
+
 license = { file = "LICENSE" }
 keywords = ["Raspberry PI 5", "Raspberry PI 4", "GPIO"]
 authors = [
