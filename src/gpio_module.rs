@@ -44,7 +44,6 @@ impl GPIOManager {
                 input_pins: HashMap::new(),
                 output_pins: HashMap::new(),
                 callbacks: HashMap::new(),
-                async_interrupts: HashMap::new(),
                 pwm_setup: HashMap::new(),
             })),
         })
@@ -328,12 +327,13 @@ impl GPIOManager {
         };
 
         let mut manager = manager_clone.lock().unwrap();
+        let callbacks_set = manager.callbacks.get(&pin_num).is_some();
+
         if let Some(callback_vec) = manager.callbacks.get_mut(&pin_num) {
             callback_vec.push(callback);
         } else {
             manager.callbacks.insert(pin_num, vec![callback]);
         }
-        let callbacks_set = manager.async_interrupts.get(&pin_num).is_some();
         if !callbacks_set {
             let mut pin = pin_arc.lock().unwrap();
             pin.set_async_interrupt(Trigger::Both, Some(Duration::from_millis(debounce_time_ms)), move |event| {
@@ -341,8 +341,6 @@ impl GPIOManager {
                 // Call input_callback using the locked manager
                 manager.input_callback(pin_num, event);
             }).expect("Error setting up async interrupt");
-
-            manager.async_interrupts.insert(pin_num, true);
         }
         drop(manager);
         Ok(())
@@ -665,7 +663,6 @@ impl GPIOManager {
             }
         }
 
-        manager.async_interrupts.remove(&pin_num);
         manager.callbacks.remove(&pin_num);
         Ok(())
     }
@@ -695,6 +692,7 @@ impl GPIOManager {
         }
         callbacks.remove(index);
         if callbacks.is_empty() {
+            drop(manager);
             self.unassign_callbacks(pin_num)?;
         }
 

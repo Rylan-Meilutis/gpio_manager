@@ -88,7 +88,6 @@ pub struct PinManager {
     input_pins: HashMap<u8, Arc<Mutex<Pin>>>,
     output_pins: HashMap<u8, Arc<Mutex<Pin>>>,
     callbacks: HashMap<u8, Vec<Callback>>,
-    async_interrupts: HashMap<u8, bool>,
     pwm_setup: HashMap<u8, PwmConfig>,
 }
 

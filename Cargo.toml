@@ -1,6 +1,6 @@
 [package]
 name = "gpio_manager"
-version = "3.0.0"
+version = "3.0.1"
 edition = "2021"
 include = ["src/**/*.rs", "Cargo.toml", "Cargo.lock", "README.md", "gpio_manager.pyi"]
 authors = ["Rylan Meilutis <rylan.meilutis@gmail.com>"]
