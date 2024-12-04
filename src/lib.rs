@@ -75,10 +75,19 @@ pub fn check_pwm_values(frequency_hz: &Option<f64>, duty_cycle: &Option<f64>, pe
     Ok(())
 }
 
+#[derive(Debug)]
+struct Callback {
+    callable: Arc<Mutex<PyObject>>,
+    trigger_edge: TriggerEdge,
+    args: Arc<Mutex<PyObject>>,
+    send_time: bool,
+    send_edge: bool,
+}
+
 pub struct PinManager {
     input_pins: HashMap<u8, Arc<Mutex<Pin>>>,
     output_pins: HashMap<u8, Arc<Mutex<Pin>>>,
-    callbacks: HashMap<u8, PyObject>,
+    callbacks: HashMap<u8, Vec<Callback>>,
     async_interrupts: HashMap<u8, bool>,
     pwm_setup: HashMap<u8, PwmConfig>,
 }

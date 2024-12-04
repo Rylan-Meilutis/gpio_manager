@@ -25,7 +25,7 @@ class GPIOManager:
                         include_trigger_edge: Optional[bool] = False) -> None:
         """
         Assigns a callback to an input pin. If enabled, TriggerTime is a float representing the time the trigger occurred since unix time epoch. TriggerEdge is an enum representing the edge that triggered the
-        callback (gpio_manager.TriggerEdge.[RISING, FALLING]).
+        callback (gpio_manager.TriggerEdge.[RISING, FALLING]). You can assign more than one callback to each pin by calling this function multiple times with different callbacks.
 
         :param pin_num: The GPIO pin.
         :param callback: The callback function to be invoked on pin change.
@@ -67,13 +67,22 @@ class GPIOManager:
         """
         ...
 
-    def unassign_callback(self, pin_num: int) -> None:
+    def unassign_callbacks(self, pin_num: int) -> None:
         """
-        Unassigns a callback from an input pin.
+        Unassigns all callbacks from an input pin.
 
         :param pin_num: The GPIO pin whose callback is to be reset.
         """
         ...
+
+    def unassign_callback(self, pin_num: int, callback: Callable[..., None]) -> None:
+        """
+        Unassigns a specific callback from an input pin.
+
+        :param pin_num: The GPIO pin whose callback is to be reset.
+        :param callback: The callback function to be removed from the input pin.
+        """
+    ...
 
     def wait_for_edge(self, pin_num: int, trigger_edge: Optional[TriggerEdge] = TriggerEdge.BOTH, timeout_ms:
     Optional[int] = None) -> None:
