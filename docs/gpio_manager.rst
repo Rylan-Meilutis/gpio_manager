@@ -58,8 +58,23 @@ Methods
 
    **Example**::
 
-       GPIO_manager.assign_callback(pin_num=15, callback=button_callback, trigger_edge=gpio_manager.TriggerEdge.FALLING, args=(12,), debounce_time_ms=50)
-       GPIO_manager.assign_callback(pin_num=16, callback=button_callback, trigger_edge=gpio_manager.TriggerEdge.RISING)
+         GPIO_manager.assign_callback(pin_num=15, callback=button_callback, trigger_edge=gpio_manager.TriggerEdge.FALLING, args=(15,), debounce_time_ms=50)
+         GPIO_manager.assign_callback(pin_num=16, callback=button_callback, trigger_edge=gpio_manager.TriggerEdge.RISING)
+
+
+   **Example Callback**::
+
+      def button_callback(trigger_time: float, edge: gpio_manager.TriggerEdge, pin_num: int):
+          if edge == gpio_manager.TriggerEdge.RISING:
+              print(f"Button {pin_num} triggered at {trigger_time} on a rising edge")
+          else:
+              print(f"Button {pin_num} triggered at {trigger_time} on a falling edge")
+
+
+   **This callback was setup with the following function call to trigger on pin 15**::
+
+          GPIO_manager.assign_callback(15, button_callback, gpio_manager.TriggerEdge.BOTH, args=(15,), include_trigger_time=True, include_trigger_edge=True)
+
 
 - **add_output_pin**:
    Sets up an output pin.
