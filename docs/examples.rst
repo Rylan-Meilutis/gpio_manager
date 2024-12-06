@@ -42,6 +42,115 @@ GPIOManager Examples
     time.sleep(2)
     gpio.cleanup()
 
+- **Sounding an Alarm on Pin 4 When an object gets to close to an ultrasonic sensor**::
+
+    import time
+
+    import gpio_manager
+
+    start_time = 0
+    end_time = 0
+    BUZZER_PIN = 4
+    TRIGGER_PIN = 23
+    ECHO_PIN = 24
+
+    SPEED_OF_SOUND_MS = 34300
+
+    def milliseconds_to_seconds(miliseconds: float) -> float:
+        return miliseconds / 1000
+
+
+    def activate_warning(distance):
+        gpio = gpio_manager.GPIOManager()
+        repeat_count = 3
+
+        if 10 < distance < 25:
+            duration_time = milliseconds_to_seconds(250)
+
+        elif distance < 10:
+            duration_time = milliseconds_to_seconds(150)
+        else:
+            return
+        for _ in range(repeat_count):
+            gpio.set_pwm_duty_cycle(BUZZER_PIN, 90)
+            time.sleep(duration_time)
+            gpio.set_pwm_duty_cycle(BUZZER_PIN, 0)
+            time.sleep(duration_time)
+
+
+    def callback(t_time, edge):
+        global start_time
+        global end_time
+        if edge == gpio_manager.TriggerEdge.RISING:
+            start_time = t_time
+        else:
+            end_time = t_time
+
+
+    def microseconds_to_seconds(microseconds: float) -> float:
+        return microseconds / 1000000
+
+
+    def setup_gpio() -> gpio_manager.GPIOManager:
+        gpio = gpio_manager.GPIOManager()
+        gpio.add_output_pin(TRIGGER_PIN)
+        gpio.add_input_pin(TRIGGER_PIN)
+        gpio.setup_pwm(BUZZER_PIN, 100)
+        gpio.start_pwm(BUZZER_PIN)
+        return gpio
+
+
+    def send_trigger_pulse():
+        gpio = gpio_manager.GPIOManager()
+        gpio.set_output_pin(TRIGGER_PIN, gpio_manager.PinState.HIGH)
+        time.sleep(microseconds_to_seconds(10))
+        gpio.set_output_pin(TRIGGER_PIN, gpio_manager.PinState.LOW)
+
+
+    def loop():
+        gpio = gpio_manager.GPIOManager()
+        gpio.assign_callback(ECHO_PIN, callback, gpio_manager.TriggerEdge.BOTH, include_trigger_time=True,
+                             include_trigger_edge=True, debounce_time_ms=0)
+        time.sleep(0.5)
+
+        while True:
+            send_trigger_pulse()
+            time.sleep(0.1)
+            duration = end_time - start_time
+            if duration == 0:
+                print("timeout")
+                time.sleep(3)
+                continue
+            distance = duration * SPEED_OF_SOUND_MS / 2
+            activate_warning(distance)
+            print(f"Distance: {distance:.2f} cm")
+            time.sleep(0.1)
+
+
+
+    def main():
+        gpio = setup_gpio()
+
+        print("Ultrasonic Measurement")
+        print("**************** PROGRAM IS RUNNING **************** ")
+        print("Press CTRL-C to end the program.")
+        try:
+            loop()
+
+        except KeyboardInterrupt:
+            print("\nCTRL-C detected.")
+        finally:
+            gpio.cleanup()
+
+            print("GPIO Port has been cleaned up.")
+            print("**************** PROGRAM TERMINATED ****************")
+            print()
+
+
+    if __name__ == "__main__":
+        main()
+
+
 
 PWMManager Examples
 -------------------
