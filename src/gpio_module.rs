@@ -115,6 +115,19 @@ impl GPIOManager {
         pwm.is_pin_pwm(pin_num)
     }
 
+    fn ms_to_duration(&self, ms: Option<i64>) -> Option<Duration> {
+         match ms {
+            None => None,
+            Some(ms) => {
+                if ms < 0 {
+                    None
+                } else {
+                    Some(Duration::from_millis(ms as u64))
+                }
+            }
+        }
+    }
+
 
     fn input_callback(&self, pin_num: u8, event: rppal::gpio::Event) {
         let manager = self.gpio.lock().unwrap();
@@ -700,24 +713,17 @@ impl GPIOManager {
     }
 
     /// wait for an edge on the assigned pin
-    #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = None))]
-    fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: Option<i64>) -> PyResult<()> {
+    #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = None, debounce_ms = None))]
+    fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: Option<i64>, debounce_ms: Option<i64>) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
 
         if !self.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
         }
 
-        let timeout = match timeout_ms {
-            None => None,
-            Some(timeout_ms) => {
-                if timeout_ms < 0 {
-                    None
-                } else {
-                    Some(Duration::from_millis(timeout_ms as u64))
-                }
-            }
-        };
+        let timeout = self.ms_to_duration(timeout_ms);
+
+        let debounce = self.ms_to_duration(debounce_ms);
 
         if let Some(pin_arc) = manager.input_pins.get(&pin_num) {
             let pin_arc = pin_arc.lock().unwrap();
@@ -736,8 +742,9 @@ impl GPIOManager {
             };
             if let PinType::Input(pin_arc) = &pin_arc.pin {
                 let mut pin = pin_arc.lock().unwrap();
-                pin.set_interrupt(trigger, timeout).expect("failed to setup interrupt");
+                pin.set_interrupt(trigger, debounce).expect("failed to setup interrupt");
                 pin.poll_interrupt(false, timeout).expect("failed to poll interrupt");
+                pin.clear_interrupt().expect("failed to clear interrupt");
             } else {
                 return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input pins (pin is either output or not setup)"));
             }
