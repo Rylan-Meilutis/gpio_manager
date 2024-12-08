@@ -85,7 +85,7 @@ class GPIOManager:
     ...
 
     def wait_for_edge(self, pin_num: int, trigger_edge: Optional[TriggerEdge] = TriggerEdge.BOTH, timeout_ms:
-    Optional[int] = None) -> None:
+    Optional[int] = None, debounce_ms: Optional[int] = None) -> None:
         """
         Waits for an edge on the assigned pin. This function block for the given timeout, or waits forever if it is 
         set to a negative number or None.
@@ -93,6 +93,7 @@ class GPIOManager:
         :param pin_num: The GPIO pin.
         :param trigger_edge: The trigger type (set using gpio_manager.TriggerEdge.[RISING, FALLING, BOTH]).
         :param timeout_ms: Timeout in milliseconds.
+        :param debounce_ms: Debounce time in milliseconds.
         """
         ...
 

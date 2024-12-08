@@ -149,6 +149,7 @@ Methods
    - `pin_num` (int): The GPIO pin.
    - `trigger_edge` (Optional[TriggerEdge]): Trigger type (RISING, FALLING, BOTH). **Default**: BOTH.
    - `timeout_ms` (Optional[int]): Timeout in milliseconds. **Default**: None.
+   - `debounce_ms` (Optional[int]): Debounce time in milliseconds. **Default**: None.
 
    **Example**::
 
