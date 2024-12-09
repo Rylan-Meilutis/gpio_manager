@@ -115,14 +115,14 @@ impl GPIOManager {
         pwm.is_pin_pwm(pin_num)
     }
 
-    fn ms_to_duration(&self, ms: Option<i64>) -> Option<Duration> {
+    fn ms_to_duration(&self, ms: Option<f64>) -> Option<Duration> {
          match ms {
             None => None,
             Some(ms) => {
-                if ms < 0 {
+                if ms < 0f64 {
                     None
                 } else {
-                    Some(Duration::from_millis(ms as u64))
+                    Some(Duration::from_secs_f64(ms / 1000f64))
                 }
             }
         }
@@ -273,7 +273,7 @@ impl GPIOManager {
         pin_num: u8,
         callback: PyObject,
         trigger_edge: TriggerEdge,
-        debounce_time_ms: u64,
+        debounce_time_ms: f64,
         args: Option<&Bound<'_, PyTuple>>, // Using Option to allow args to be None
         include_trigger_time: bool,
         include_trigger_edge: bool,
@@ -346,7 +346,7 @@ impl GPIOManager {
         }
         if !callbacks_set {
             let mut pin = pin_arc.lock().unwrap();
-            pin.set_async_interrupt(Trigger::Both, Some(Duration::from_millis(debounce_time_ms)), move |event| {
+            pin.set_async_interrupt(Trigger::Both, Some(Duration::from_secs_f64(debounce_time_ms / 1000f64)), move |event| {
                 let manager = GPIOManager::new_rust_reference();
                 // Call input_callback using the locked manager
                 manager.input_callback(pin_num, event);
@@ -710,8 +710,8 @@ impl GPIOManager {
     }
 
     /// wait for an edge on the assigned pin
-    #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = None, debounce_ms = None))]
-    fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: Option<i64>, debounce_ms: Option<i64>) -> PyResult<()> {
+    #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = None, debounce_ms = 2))]
+    fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: Option<f64>, debounce_ms: Option<f64>) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
 
         if !self.is_input_pin(pin_num, &manager) {

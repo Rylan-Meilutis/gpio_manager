@@ -21,8 +21,8 @@ class GPIOManager:
         ...
 
     def assign_callback(self, pin_num: int, callback: Callable[..., None], trigger_edge: Optional[TriggerEdge] =
-    TriggerEdge.BOTH, debounce_time_ms: Optional[int] = 2, args: Optional[Tuple] = None, include_trigger_time: Optional[bool] = False,
-                        include_trigger_edge: Optional[bool] = False) -> None:
+    TriggerEdge.BOTH, debounce_time_ms: Optional[float] = 2, args: Optional[Tuple] = None, include_trigger_time:
+    Optional[bool] = False, include_trigger_edge: Optional[bool] = False) -> None:
         """
         Assigns a callback to an input pin. If enabled, TriggerTime is a float representing the time the trigger occurred since unix time epoch. TriggerEdge is an enum representing the edge that triggered the
         callback (gpio_manager.TriggerEdge.[RISING, FALLING]). You can assign more than one callback to each pin by calling this function multiple times with different callbacks.
@@ -85,7 +85,7 @@ class GPIOManager:
     ...
 
     def wait_for_edge(self, pin_num: int, trigger_edge: Optional[TriggerEdge] = TriggerEdge.BOTH, timeout_ms:
-    Optional[int] = None, debounce_ms: Optional[int] = None) -> None:
+    Optional[float] = None, debounce_ms: Optional[float] = 2) -> None:
         """
         Waits for an edge on the assigned pin. This function block for the given timeout, or waits forever if it is 
         set to a negative number or None.
