@@ -265,7 +265,7 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.assign_callback(18, gpio_manager.TriggerEdge.FALLING, button_callback)```
     ///
-    #[pyo3(signature = (pin_num, callback, trigger_edge = TriggerEdge::BOTH, debounce_time_ms = 2, args = None, include_trigger_time = false,
+    #[pyo3(signature = (pin_num, callback, trigger_edge = TriggerEdge::BOTH, debounce_time_ms = 2f64, args = None, include_trigger_time = false,
     include_trigger_edge = false))]
     fn assign_callback(
         &self,
@@ -710,7 +710,7 @@ impl GPIOManager {
     }
 
     /// wait for an edge on the assigned pin
-    #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = None, debounce_ms = 2))]
+    #[pyo3(signature = (pin_num, trigger_edge = TriggerEdge::BOTH, timeout_ms = None, debounce_ms = 2f64))]
     fn wait_for_edge(&self, pin_num: u8, trigger_edge: TriggerEdge, timeout_ms: Option<f64>, debounce_ms: Option<f64>) -> PyResult<()> {
         let manager = self.gpio.lock().unwrap();
 
