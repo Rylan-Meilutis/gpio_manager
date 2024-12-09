@@ -278,9 +278,6 @@ impl GPIOManager {
         include_trigger_time: bool,
         include_trigger_edge: bool,
     ) -> PyResult<()> {
-
-        // check if the pin has an async interrupt already
-        //
         let manager = self.gpio.lock().unwrap();
 
         if !self.is_input_pin(pin_num, &manager) {
