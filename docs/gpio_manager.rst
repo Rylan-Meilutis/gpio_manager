@@ -50,7 +50,7 @@ Methods
    - `pin_num` (int): The GPIO pin.
    - `callback` (Callable): The function to invoke on pin change.
    - `trigger_edge` (Optional[TriggerEdge]): The edge trigger (RISING, FALLING, BOTH). **Default**: BOTH.
-   - `debounce_time_ms` (Optional[int]): Debounce time in milliseconds. **Default**: 2.
+   - `debounce_time_ms` (Optional[float]): Debounce time in milliseconds. **Default**: 2.
    - `args` (Optional[Tuple]): Arguments to pass to the callback function. **Default**: None.
    - `include_trigger_time` (Optional[bool]): Whether to include the trigger time in the callback arguments. **Default**: False. (Note: parameter will be the first one passed to the  function.)
    - `include_previous_state` (Optional[bool]): Whether to include the previous state in the callback arguments. **Default**: False. (Note: parameter will be the second one passed to the function if include_trigger_time is true. Otherwise, it will be the first parameter.)
@@ -148,8 +148,8 @@ Methods
 
    - `pin_num` (int): The GPIO pin.
    - `trigger_edge` (Optional[TriggerEdge]): Trigger type (RISING, FALLING, BOTH). **Default**: BOTH.
-   - `timeout_ms` (Optional[int]): Timeout in milliseconds. **Default**: None.
-   - `debounce_ms` (Optional[int]): Debounce time in milliseconds. **Default**: None.
+   - `timeout_ms` (Optional[float]): Timeout in milliseconds. **Default**: None.
+   - `debounce_ms` (Optional[float]): Debounce time in milliseconds. **Default**: 2.
 
    **Example**::
 
