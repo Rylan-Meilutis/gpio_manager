@@ -13,7 +13,7 @@ The following enums are used in this class. See the `Enums <enums.html>`_ page f
 
 PWMManager Class
 ----------------
-The `PWMManager` class provides methods to control PWM channels.
+The `PWMManager` class provides methods to control the hardware PWM channels (BCM Pin 18, and Pin 19).
 
 Methods
 -------
