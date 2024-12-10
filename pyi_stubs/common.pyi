@@ -48,11 +48,11 @@ class PinState:
     """Enum representing the GPIO pin state types for output pins. The state represents the logic state of the pin. The voltage will be set based on the logic level."""
     HIGH: 'PinState'
     """
-    Sets the pin to Logic HIGH.
+    Pin logic level high.
     """
     LOW: 'PinState'
     """
-    Sets the pin to Logic LOW.
+    Pin logic level low.
     """
 
 
