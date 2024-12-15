@@ -3,8 +3,12 @@
 ## Installation
 
 ``` bash
-pip install --break-system-packages --upgrade gpio-manager
+pip install --upgrade gpio-manager
 ``` 
+or if you have installed uv
+``` bash
+uv pip install --upgrade gpio-manager
+```
 
 ## Usage and Documentation
 - for examples and documentation, see the [documentation](https://gpio-manager.readthedocs.io/en/latest/index.html)
@@ -35,7 +39,7 @@ pip install --break-system-packages --upgrade gpio-manager
 
 ## Support
 
-- If you have any issues with the library please contact me in class or via the discussion board on brightspace.
+- If you have any issues with the library please reach out in the discussions tab, or open an issue if you find a bug.
 
 ## Coming Soon
 
