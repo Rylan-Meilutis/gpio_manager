@@ -137,6 +137,63 @@ Methods
 
         current_duty_cycle = PWM_manager.get_duty_cycle(channel_num=0)
 
+
+- **set_pulse_width**:
+   Sets the pulse width for the specified PWM channel.
+
+   **Parameters**:
+
+   - `channel_num` (int): The PWM channel number (0 or 1).
+
+   - `pulse_width_ms` (float): Pulse width in milliseconds.
+
+   **Example**::
+
+        PWM_manager.set_pulse_width(channel_num=0, pulse_width_ms=500)
+
+
+- **get_pulse_width**:
+    Gets the current pulse width of the specified PWM channel.
+
+    **Parameters**:
+
+    - `channel_num` (int): The PWM channel number (0 or 1).
+
+    **Returns**:
+    - (float): The current pulse width in milliseconds.
+
+    **Example**::
+
+          current_pulse_width = PWM_manager.get_pulse_width(channel_num=0)
+
+
+- **set_period**:
+    Sets the period for the specified PWM channel.
+
+    **Parameters**:
+
+    - `channel_num` (int): The PWM channel number (0 or 1).
+
+    - `period_ms` (float): Period in milliseconds.
+
+    **Example**::
+
+          PWM_manager.set_period(channel_num=0, period_ms=20)
+
+- **get_period**:
+    Gets the current period of the specified PWM channel.
+
+    **Parameters**:
+
+    - `channel_num` (int): The PWM channel number (0 or 1).
+
+    **Returns**:
+    - (float): The current period in milliseconds.
+
+    **Example**::
+
+          current_period = PWM_manager.get_period(channel_num=0)
+
 - **cleanup**:
    Cleans up all PWM channels.
 
