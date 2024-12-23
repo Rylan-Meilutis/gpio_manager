@@ -130,8 +130,14 @@ impl GPIOManager {
 
 
     fn input_callback(&self, pin_num: u8, event: rppal::gpio::Event) {
-        let manager = self.gpio.lock().unwrap();
-        let callbacks = manager.callbacks.get(&pin_num).unwrap();
+        let callbacks = {
+            let manager = self.gpio.lock().unwrap();
+            manager
+                .callbacks
+                .get(&pin_num)
+                .cloned() // Clones the Vec<Callback> to avoid holding the lock
+                .unwrap_or_else(|| Vec::new()) // Creates a new Vec if None
+        };
         let edge = match event.trigger {
             Trigger::RisingEdge => TriggerEdge::RISING,
             Trigger::FallingEdge => TriggerEdge::FALLING,
@@ -152,7 +158,9 @@ impl GPIOManager {
 
         // Re-acquire the GIL for calling the Python callback
         Python::with_gil(|py| {
+            
             for callback in callbacks {
+                let manager = self.gpio.lock().unwrap();
                 if callback.trigger_edge != TriggerEdge::BOTH && callback.trigger_edge != edge {
                     continue;
                 }
@@ -175,7 +183,7 @@ impl GPIOManager {
                 }
 
                 let new_args_tuple = PyTuple::new_bound(py, new_args);
-
+                drop(manager);
                 // Call the Python callback
                 if let Err(e) = cb.call1(py, new_args_tuple) {
                     e.print(py);

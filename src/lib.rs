@@ -75,7 +75,7 @@ pub fn check_pwm_values(frequency_hz: &Option<f64>, duty_cycle: &Option<f64>, pe
     Ok(())
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Callback {
     callable: Arc<Mutex<PyObject>>,
     trigger_edge: TriggerEdge,
