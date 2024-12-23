@@ -180,6 +180,7 @@ Methods
 
           PWM_manager.set_period(channel_num=0, period_ms=20)
 
+
 - **get_period**:
     Gets the current period of the specified PWM channel.
 
@@ -193,6 +194,7 @@ Methods
     **Example**::
 
           current_period = PWM_manager.get_period(channel_num=0)
+
 
 - **cleanup**:
    Cleans up all PWM channels.

@@ -25,7 +25,9 @@ class GPIOManager:
     Optional[bool] = False, include_trigger_edge: Optional[bool] = False) -> None:
         """
         Assigns a callback to an input pin. If enabled, TriggerTime is a float representing the time the trigger occurred since unix time epoch. TriggerEdge is an enum representing the edge that triggered the
-        callback (gpio_manager.TriggerEdge.[RISING, FALLING]). You can assign more than one callback to each pin by calling this function multiple times with different callbacks.
+        callback (gpio_manager.TriggerEdge.[RISING, FALLING]). You can assign more than one callback to each pin by calling this function multiple times with different 
+        callbacks. (Note) The debounce time is only assigned the first time a callback is assigned to a pin. If you want to change the debounce time, you must unassign the 
+        callback and reassign it with the new debounce time.
 
         :param pin_num: The GPIO pin.
         :param callback: The callback function to be invoked on pin change.

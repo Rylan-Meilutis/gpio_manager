@@ -43,7 +43,8 @@ Methods
 
 - **assign_callback**:
    Assigns a callback function to an input pin. If enabled, TriggerTime is a float representing the time the trigger occurred since unix time epoch. TriggerEdge is an enum
-   representing the edge that triggered the callback (gpio_manager.TriggerEdge.[RISING, FALLING]). You can assign multiple callbacks to the same pin.
+   representing the edge that triggered the callback (gpio_manager.TriggerEdge.[RISING, FALLING]). You can assign multiple callbacks to the same pin. (Note) The debounce time is
+    only assigned the first time a callback is assigned to a pin. If you want to change the debounce time, you must unassign the callback and reassign it with the new debounce time.
 
    **Parameters**:
 
@@ -90,6 +91,7 @@ Methods
        GPIO_manager.add_output_pin(pin_num=12, pin_state=gpio_manager.PinState.LOW, logic_level=gpio_manager.LogicLevel.HIGH)
        GPIO_manager.add_output_pin(pin_num=11)
 
+
 - **set_output_pin**:
    Sets the state of an output pin.
 
@@ -101,6 +103,7 @@ Methods
    **Example**::
 
        GPIO_manager.set_output_pin(pin_num=12, pin_state=gpio_manager.PinState.HIGH)
+
 
 - **get_pin**:
    Polls the current state of an input pin.
@@ -115,6 +118,7 @@ Methods
    **Example**::
 
        current_state = GPIO_manager.get_pin(pin_num=12)
+
 
 - **unassign_callback**:
    Unassigns the provided callback from an input pin.
@@ -156,6 +160,7 @@ Methods
        GPIO_manager.wait_for_edge(pin_num=15, trigger_edge=gpio_manager.TriggerEdge.FALLING, timeout_ms=1000)
        GPIO_manager.wait_for_edge(pin_num=16, trigger_edge=gpio_manager.TriggerEdge.RISING)
 
+
 - **setup_pwm**:
    Sets up a PWM signal on the given pin. The pin must be set up as an output pin before calling this function.
 
@@ -176,6 +181,7 @@ Methods
        GPIO_manager.setup_pwm(pin_num=12, frequency_hz=1000, duty_cycle=50)
        GPIO_manager.setup_pwm(pin_num=11, period_ms=1000, pulse_width_ms=500)
 
+
 - **set_pwm_duty_cycle**:
    Sets the PWM signal's duty cycle.
 
@@ -187,6 +193,7 @@ Methods
    **Example**::
 
        GPIO_manager.set_pwm_duty_cycle(pin_num=12, duty_cycle=75)
+
 
 - **set_pwm_frequency**:
    Sets the PWM signal's frequency.
