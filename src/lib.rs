@@ -100,14 +100,14 @@ struct PwmConfig {
 }
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum PinType {
     Input(Arc<Mutex<InputPin>>),
     Output(Arc<Mutex<OutputPin>>),
 }
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Pin {
     pin: PinType,
     logic_level: LogicLevel,

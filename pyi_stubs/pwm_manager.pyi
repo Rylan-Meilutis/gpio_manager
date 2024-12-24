@@ -8,7 +8,8 @@ class PWMManager:
     def setup_pwm_channel(self, channel_num: int, frequency_hz: Optional[float] = None,
                           duty_cycle: Optional[float] = None, period_ms: Optional[float] = None,
                           pulse_width_ms: Optional[float] = None,
-                          logic_level: Optional['LogicLevel'] = LogicLevel.HIGH) -> None:
+                          logic_level: Optional['LogicLevel'] = LogicLevel.HIGH,
+                          reset_on_exit: bool = True) -> None:
         """
         Sets up a PWM channel with the specified parameters.
         The value of frequency_hz and duty_cycle overwrites period_ms and pulse_width_ms if they are set.
@@ -21,6 +22,17 @@ class PWMManager:
         :param period_ms: The period in milliseconds.
         :param pulse_width_ms: The pulse width in milliseconds.
         :param logic_level: The Logic level of the PWM signal (set using LogicLevel.[NORMAL or INVERSE]).
+        :param reset_on_exit: If True, the PWM channel will be reset when the program exits. Calling cleanup() or reset_pwm_channel() will also reset the channel.
+        """
+        ...
+
+
+    def set_reset_on_exit(self, channel_num: int, reset_on_exit: bool) -> None:
+        """
+        Sets the reset_on_exit flag for the specified PWM channel.
+
+        :param channel_num: The PWM channel number (0 or 1).
+        :param reset_on_exit: If True, the PWM channel will be reset when the program exits. Calling cleanup() or reset_pwm_channel() will also reset the channel.
         """
         ...
 
