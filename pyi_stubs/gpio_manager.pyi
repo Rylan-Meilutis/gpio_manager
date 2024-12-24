@@ -9,14 +9,16 @@ class GPIOManager:
         ...
 
     def add_input_pin(self, pin_num: int,
-                      pull_resistor_state: Optional[InternPullResistorState] = InternPullResistorState.AUTO,
-                      logic_level: Optional[LogicLevel] = LogicLevel.HIGH) -> None:
+                      pull_resistor_state: InternPullResistorState = InternPullResistorState.AUTO,
+                      logic_level: LogicLevel = LogicLevel.HIGH, reset_on_exit: bool = True) -> None:
         """
-        Sets up an input pin but does not assign a callback yet.
+        Sets up an input pin to be read from.
 
         :param pin_num: The GPIO pin to configure as input.
         :param pull_resistor_state: The pin state (set it by using gpio_manager.InternPullResistorState.[PULLUP, PULLDOWN, EXTERNAL, or AUTO]).
         :param logic_level: The logic level of the pin (set it by using gpio_manager.LogicLevel.[HIGH or LOW]).
+        :param reset_on_exit: Whether to reset the pin to its default state when the pin is no longer in use. Calling cleanup() or reset() will also ensure that the pin is reset to
+         its default state.
         """
         ...
 
@@ -35,21 +37,34 @@ class GPIOManager:
         :param args: The arguments to pass to the callback function.
         :param debounce_time_ms: The debounce time in milliseconds.
         :param include_trigger_time: Whether to include the trigger time in the callback. (Will be the first argument)
-        :param include_trigger_edge: Whether to include the trigger edge in the callback. (Will be the second argument if include_trigger_time is True, otherwise the first
-        argument)
+        :param include_trigger_edge: Whether to include the trigger edge in the callback. (Will be the second argument if include_trigger_time is True, otherwise the first argument)
         """
         ...
 
-    def add_output_pin(self, pin_num: int, pin_state: Optional[PinState] = PinState.LOW,
-                       logic_level: Optional[LogicLevel] = LogicLevel.HIGH) -> None:
+    def add_output_pin(self, pin_num: int, pin_state: PinState = PinState.LOW,
+                       logic_level: LogicLevel = LogicLevel.HIGH, reset_on_exit: bool = True) -> None:
         """
         Sets up an output pin.
 
         :param pin_num: The GPIO pin to configure as output.
         :param pin_state: The initial state of the pin (set it by using gpio_manager.PINState.[HIGH or LOW]).
         :param logic_level: The logic level of the pin (set it by using gpio_manager.LogicLevel.[HIGH or LOW]).
+        :param reset_on_exit: Whether to reset the pin to its default state when the pin is no longer in use. Calling cleanup() or reset() will also ensure that the pin is reset to
+         its default state.
         """
         ...
+
+
+    def set_reset_on_exit(self, pin_num: int, reset_on_exit: bool) -> None :
+        """
+        Sets the reset_on_exit flag for the given pin. If set the pin will be reset to its default state when the pin is no longer in use. Calling cleanup() or reset() will also ensure that the pin is reset to
+        its default state.
+
+        :param pin_num: The GPIO pin.
+        :param reset_on_exit: Whether to reset the pin to its default state when the pin is no longer in use.
+        """
+        ...
+
 
     def set_output_pin(self, pin_num: int, pin_state: PinState) -> None:
         """

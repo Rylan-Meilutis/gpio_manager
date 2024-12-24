@@ -124,10 +124,10 @@ impl PWMManager {
     /// ```python
     /// pwm_manager.setup_pwm_channel(0, frequency_hz=100, duty_cycle=0.5, polarity=pwm_manager.PWMPolarity.NORMAL)
     /// ```
-    #[pyo3(signature = (channel_num, frequency_hz = None, duty_cycle = None, period_ms = None, pulse_width_ms = None, logic_level = LogicLevel::HIGH)
-    )]
+    #[pyo3(signature = (channel_num, frequency_hz = None, duty_cycle = None, period_ms = None, pulse_width_ms = None, logic_level = LogicLevel::HIGH, 
+    reset_on_exit = true))]
     fn setup_pwm_channel(&self, channel_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms:
-    Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
+    Option<f64>, logic_level: LogicLevel, reset_on_exit: bool) -> PyResult<()> {
         let gpio_manager = GPIOManager::new_rust_reference();
         let manager = gpio_manager.get_manager();
         let manager = manager.lock().unwrap();
@@ -195,12 +195,26 @@ impl PWMManager {
             },
         }
 
-        let pwm = Pwm::with_frequency(channel, frequency, duty_cycle_percent / 100f64, polarity, false)
+        let mut pwm = Pwm::with_frequency(channel, frequency, duty_cycle_percent / 100f64, polarity, false)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
-
+        
+        pwm.set_reset_on_drop(reset_on_exit);
+        
         pwm_channels.insert(channel_num, Arc::new(Mutex::new(pwm)));
 
         Ok(())
+    }
+    
+    #[pyo3(signature = (channel_num, reset_on_exit))]
+    fn set_reset_on_exit(&self, channel_num: u8, reset_on_exit: bool) -> PyResult<()> {
+        let pwm_channels = self.pwm_channels.lock().unwrap();
+        if let Some(pwm_arc) = pwm_channels.get(&channel_num) {
+            let mut pwm = pwm_arc.lock().unwrap();
+            pwm.set_reset_on_drop(reset_on_exit);
+            Ok(())
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
+        }
     }
 
     /// Starts the PWM signal on the specified channel.
@@ -256,6 +270,7 @@ impl PWMManager {
     /// ```
     #[pyo3(signature = (channel_num))]
     fn reset_pwm_channel(&self, channel_num: u8) -> PyResult<()> {
+        self.set_reset_on_exit(channel_num, true)?;
         self.stop_pwm_channel(channel_num)?;
 
         let mut pwm_channels = self.pwm_channels.lock().unwrap();

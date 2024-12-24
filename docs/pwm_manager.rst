@@ -45,10 +45,26 @@ Methods
 
    - `logic_level` (Optional[LogicLevel]): Logic level of the PWM signal (HIGH, LOW). **Default**: HIGH.
 
+   - `reset_on_exit` (bool): If True, the PWM channel will be reset when the pwm channel is no longer used. **Default**: True.
+
    **Example**::
 
         PWM_manager.setup_pwm_channel(channel_num=0, frequency_hz=1000, duty_cycle=50)
         PWM_manager.setup_pwm_channel(channel_num=1, period_ms=1000, pulse_width_ms=500)
+
+
+- **set_reset_on_exit**:
+   Sets the reset_on_exit flag for the given pin. If set the pin will be reset to its default state when the pin is no longer in use. Calling cleanup() or reset() will also ensure that the pin is reset to its default state.
+
+   **Parameters**:
+
+   - `channel_num` (int): The PWM channel number (0 or 1).
+   - `reset_on_exit` (bool): Whether to reset the pin to its default state when it is no longer in use.
+
+   **Example**::
+
+       PWM_manager.set_reset_on_exit(channel_num=0, reset_on_exit=False)
+
 
 - **start_pwm_channel**:
    Starts the PWM signal on the specified channel.

@@ -215,9 +215,9 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.add_input_pin(18)```
     ///
-    #[pyo3(signature = (pin_num, pull_resistor_state = InternPullResistorState::AUTO, logic_level = LogicLevel::HIGH)
+    #[pyo3(signature = (pin_num, pull_resistor_state = InternPullResistorState::AUTO, logic_level = LogicLevel::HIGH, reset_on_exit = true)
     )]
-    fn add_input_pin(&self, pin_num: u8, pull_resistor_state: InternPullResistorState, logic_level: LogicLevel) -> PyResult<()> {
+    fn add_input_pin(&self, pin_num: u8, pull_resistor_state: InternPullResistorState, logic_level: LogicLevel, reset_on_exit: bool) -> PyResult<()> {
         if self.is_pin_pwm(pin_num) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin configured for hardware PWM, please reset the pin to use as regular input pin"));
         }
@@ -226,7 +226,7 @@ impl GPIOManager {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin found in output pins (pin is already setup as an output pin"));
         }
         let gpio = Gpio::new().map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
-        let input_pin = match pull_resistor_state {
+        let mut input_pin = match pull_resistor_state {
             InternPullResistorState::PULLUP =>
                 gpio
                     .get(pin_num)
@@ -251,6 +251,7 @@ impl GPIOManager {
                     .into_input_pullup()
             },
         };
+        input_pin.set_reset_on_drop(reset_on_exit);
         let input_pin = Pin {
             pin: PinType::Input(Arc::new(Mutex::new(input_pin))),
             logic_level,
@@ -372,8 +373,8 @@ impl GPIOManager {
     /// Example usage:
     /// ```manager.add_output_pin(25)```
     ///
-    #[pyo3(signature = (pin_num, pin_state = PinState::LOW, logic_level = LogicLevel::HIGH))]
-    fn add_output_pin(&self, pin_num: u8, pin_state: PinState, logic_level: LogicLevel) -> PyResult<()> {
+    #[pyo3(signature = (pin_num, pin_state = PinState::LOW, logic_level = LogicLevel::HIGH, reset_on_exit = true))]
+    fn add_output_pin(&self, pin_num: u8, pin_state: PinState, logic_level: LogicLevel, reset_on_exit: bool) -> PyResult<()> {
         if self.is_pin_pwm(pin_num) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin configured for hardware PWM, please reset the pin to use as regular input pin"));
         }
@@ -398,6 +399,8 @@ impl GPIOManager {
                 output_pin.set_high();
             },
         };
+        output_pin.set_reset_on_drop(reset_on_exit);
+
         let output_pin = Pin {
             pin: PinType::Output(Arc::new(Mutex::new(output_pin))),
             logic_level,
@@ -417,9 +420,10 @@ impl GPIOManager {
     ///
     /// Example usage:
     /// ```manager.set_pwm(25, 20, 1200)```
-    #[pyo3(signature = (pin_num, frequency_hz = None, duty_cycle = None, period_ms = None, pulse_width_ms = None, logic_level = LogicLevel::HIGH)
+    #[pyo3(signature = (pin_num, frequency_hz = None, duty_cycle = None, period_ms = None, pulse_width_ms = None, logic_level = LogicLevel::HIGH, reset_on_exit = true)
     )]
-    fn setup_pwm(&self, pin_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms: Option<f64>, logic_level: LogicLevel) -> PyResult<()> {
+    fn setup_pwm(&self, pin_num: u8, frequency_hz: Option<f64>, duty_cycle: Option<f64>, period_ms: Option<f64>, pulse_width_ms: Option<f64>, logic_level:
+    LogicLevel, reset_on_exit: bool) -> PyResult<()> {
         if self.is_pin_pwm(pin_num) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin configured for hardware PWM, please reset the pin to use as regular input pin"));
         }
@@ -437,10 +441,10 @@ impl GPIOManager {
             drop(manager);
             match logic_level {
                 LogicLevel::LOW => {
-                    self.add_output_pin(pin_num, PinState::LOW, logic_level)?;
+                    self.add_output_pin(pin_num, PinState::LOW, logic_level, reset_on_exit)?;
                 }
                 LogicLevel::HIGH => {
-                    self.add_output_pin(pin_num, PinState::LOW, logic_level)?;
+                    self.add_output_pin(pin_num, PinState::LOW, logic_level, reset_on_exit)?;
                 }
             }
 
@@ -466,6 +470,32 @@ impl GPIOManager {
         }
     }
 
+    #[pyo3(signature = (pin_num, reset_on_exit))]
+    fn set_reset_on_exit(&self, pin_num: u8, reset_on_exit: bool) -> PyResult<()> {
+        let manager = self.gpio.lock().unwrap();
+        let output_pins = manager.output_pins.get(&pin_num);
+        let input_pins = manager.input_pins.get(&pin_num);
+        let pin_match = if let Some(_) = output_pins {
+            output_pins
+        } else {
+            input_pins
+        };
+        if let Some(pin) =  pin_match{
+            let pin = pin.lock().unwrap();
+            if let PinType::Output(out_pin) = &pin.pin {
+                let mut out_pin = out_pin.lock().unwrap();
+                out_pin.set_reset_on_drop(reset_on_exit);
+            }
+            else if let PinType::Input(in_pin) = &pin.pin {
+                let mut in_pin = in_pin.lock().unwrap();
+                in_pin.set_reset_on_drop(reset_on_exit);
+            }
+            Ok(())
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin not found in input or output pins (pin is not setup)"))
+        }
+
+    }
 
     #[pyo3(signature = (pin_num, duty_cycle = 0f64))]
     fn set_pwm_duty_cycle(&self, pin_num: u8, duty_cycle: f64) -> PyResult<()> {
@@ -774,12 +804,14 @@ impl GPIOManager {
         // Handle input pins
         if let Some(_) = input_pin_arc {
             self.unassign_callbacks(pin_num)?;
+            self.set_reset_on_exit(pin_num, true)?;
             // Re-lock manager to remove the input pin
             let mut manager = self.gpio.lock().unwrap();
             manager.input_pins.remove(&pin_num);
         }
         // Handle output pins
         else if let Some(pin_arc) = output_pin_arc {
+            self.set_reset_on_exit(pin_num, true)?;
             let pin_arc = pin_arc.lock().unwrap();
             // Check if this pin has a PWM setup and reset PWM if necessary
             let pwm_exists = {

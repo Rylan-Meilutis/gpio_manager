@@ -33,8 +33,9 @@ Methods
    **Parameters**:
 
    - `pin_num` (int): The GPIO pin to configure as input.
-   - `pull_resistor_state` (Optional[InternPullResistorState]): Pull resistor state (PULLUP, PULLDOWN, EXTERNAL, AUTO). **Default**: AUTO.
-   - `logic_level` (Optional[LogicLevel]): The logic level of the pin (HIGH, LOW). **Default**: HIGH.
+   - `pull_resistor_state` (InternPullResistorState): Pull resistor state (PULLUP, PULLDOWN, EXTERNAL, AUTO). **Default**: AUTO.
+   - `logic_level` (LogicLevel): The logic level of the pin (HIGH, LOW). **Default**: HIGH.
+   - `reset_on_exit` (bool): Whether to reset the pin on exit. **Default**: True. Calling cleanup() or reset() will also ensure that the pin is reset to its default state.
 
    **Example**::
 
@@ -83,13 +84,30 @@ Methods
    **Parameters**:
 
    - `pin_num` (int): The GPIO pin to configure as output.
-   - `pin_state` (Optional[PinState]): Initial state of the pin (HIGH, LOW). **Default**: LOW.
-   - `logic_level` (Optional[LogicLevel]): Logic level of the pin (HIGH, LOW). **Default**: HIGH.
+   - `pin_state` (PinState): Initial state of the pin (HIGH, LOW). **Default**: LOW.
+   - `logic_level` (LogicLevel): Logic level of the pin (HIGH, LOW). **Default**: HIGH.
+   - `reset_on_exit` (bool): Whether to reset the pin on exit. **Default**: True. Calling cleanup() or reset() will also ensure that the pin is reset to its default state.
+
 
    **Example**::
 
        GPIO_manager.add_output_pin(pin_num=12, pin_state=gpio_manager.PinState.LOW, logic_level=gpio_manager.LogicLevel.HIGH)
        GPIO_manager.add_output_pin(pin_num=11)
+
+
+
+- **set_reset_on_exit**:
+   Sets the reset_on_exit flag for the given pin. If set the pin will be reset to its default state when the pin is no longer in use. Calling cleanup() or reset() will also ensure that the pin is reset to its default state.
+
+   **Parameters**:
+
+   - `pin_num` (int): The GPIO pin.
+   - `reset_on_exit` (bool): Whether to reset the pin to its default state when it is no longer in use.
+
+   **Example**::
+
+       GPIO_manager.set_reset_on_exit(pin_num=12, reset_on_exit=False)
+
 
 
 - **set_output_pin**:
