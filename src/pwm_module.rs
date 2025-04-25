@@ -132,10 +132,21 @@ impl PWMManager {
         let manager = gpio_manager.get_manager();
         let manager = manager.lock().unwrap();
 
-        let pin_num = match channel_num {
-            0 => 18,
-            1 => 19,
-            _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+        let pin_num = match DeviceInfo::new().unwrap().model() {
+            Model::RaspberryPi5 =>
+                match channel_num {
+                    0 => 12,
+                    1 => 13,
+                    2 => 18,
+                    3 => 19,
+                    _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+                },
+            _ =>
+                match channel_num {
+                    0 => 18,
+                    1 => 19,
+                    _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+                },
         };
         if gpio_manager.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin is already in use as an input pin"));
