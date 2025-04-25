@@ -1,6 +1,6 @@
 [project]
 name = "gpio_manager"
-version = "3.1.0"
+version = "3.2.0"
 description = "Rust bindings for the rppal crate to manage GPIO pins on a Raspberry Pi."
 readme = "info.md"
 requires-python = ">=3.8"

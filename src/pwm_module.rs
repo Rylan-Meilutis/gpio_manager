@@ -12,7 +12,11 @@ use std::time::Duration;
 
 fn set_gpio_to_pwm_pi5(pin: usize) -> std::io::Result<()> {
     // Set GPIO18 to alternate function `a3` with pull-down
-    hw_pwm_setup(pin, "a3")
+    match pin {
+        12 => hw_pwm_setup(pin, "a0"),
+        13 => hw_pwm_setup(pin, "a0"),
+        _ => hw_pwm_setup(pin, "a3"),
+    }
 }
 
 
@@ -132,10 +136,21 @@ impl PWMManager {
         let manager = gpio_manager.get_manager();
         let manager = manager.lock().unwrap();
 
-        let pin_num = match channel_num {
-            0 => 18,
-            1 => 19,
-            _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+        let pin_num = match DeviceInfo::new().unwrap().model() {
+            Model::RaspberryPi5 =>
+                match channel_num {
+                    0 => 12,
+                    1 => 13,
+                    2 => 18,
+                    3 => 19,
+                    _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+                },
+            _ =>
+                match channel_num {
+                    0 => 18,
+                    1 => 19,
+                    _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+                },
         };
         if gpio_manager.is_input_pin(pin_num, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin is already in use as an input pin"));
@@ -151,11 +166,21 @@ impl PWMManager {
         if pwm_channels.contains_key(&channel_num) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel already initialized"));
         }
-
-        let channel = match channel_num {
-            0 => Channel::Pwm0,
-            1 => Channel::Pwm1,
-            _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
+        let channel = match DeviceInfo::new().unwrap().model() {
+            Model::RaspberryPi5 =>
+                match channel_num {
+                    0 => Channel::Pwm0,
+                    1 => Channel::Pwm1,
+                    2 => Channel::Pwm2,
+                    3 => Channel::Pwm3,
+                    _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number"))
+                },
+            _ =>
+                match channel_num {
+                    0 => Channel::Pwm0,
+                    1 => Channel::Pwm1,
+                    _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number"))
+                },
         };
 
         let (frequency, duty_cycle_percent) = compute_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms);
@@ -171,23 +196,30 @@ impl PWMManager {
 
         match DeviceInfo::new().unwrap().model() {
             Model::RaspberryPi5 => match channel_num {
-                0 => match set_gpio_to_pwm_pi5(18) {
+                0 => match set_gpio_to_pwm_pi5(12) {
                     Ok(_) => {}
                     Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
                 },
-                1 => match set_gpio_to_pwm_pi5(19) {
+                1 => match set_gpio_to_pwm_pi5(13) {
+                    Ok(_) => {}
+                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
+                },
+                2 => match set_gpio_to_pwm_pi5(18) {
+                    Ok(_) => {}
+                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
+                },
+                3 => match set_gpio_to_pwm_pi5(19) {
                     Ok(_) => {}
                     Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
                 },
                 _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
             },
-
             _ => match channel_num {
                 0 => match set_gpio_to_pwm_other(18) {
                     Ok(_) => {}
                     Err(_) => {}
                 },
-                1 => match set_gpio_to_pwm_other(18) {
+                1 => match set_gpio_to_pwm_other(19) {
                     Ok(_) => {}
                     Err(_) => {}
                 },
@@ -197,14 +229,14 @@ impl PWMManager {
 
         let mut pwm = Pwm::with_frequency(channel, frequency, duty_cycle_percent / 100f64, polarity, false)
             .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{:?}", e)))?;
-        
+
         pwm.set_reset_on_drop(reset_on_exit);
-        
+
         pwm_channels.insert(channel_num, Arc::new(Mutex::new(pwm)));
 
         Ok(())
     }
-    
+
     #[pyo3(signature = (channel_num, reset_on_exit))]
     fn set_reset_on_exit(&self, channel_num: u8, reset_on_exit: bool) -> PyResult<()> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
@@ -216,6 +248,7 @@ impl PWMManager {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
         }
     }
+
 
     /// Starts the PWM signal on the specified channel.
     ///
@@ -238,6 +271,7 @@ impl PWMManager {
         }
     }
 
+
     /// Stops the PWM signal on the specified channel.
     ///
     /// Parameters:
@@ -258,6 +292,7 @@ impl PWMManager {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
         }
     }
+
 
     /// Removes the PWM channel from the manager.
     ///
@@ -280,6 +315,7 @@ impl PWMManager {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
         }
     }
+
 
     /// Sets the duty cycle for the specified PWM channel.
     ///
@@ -307,6 +343,7 @@ impl PWMManager {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
         }
     }
+
 
     /// Sets the frequency for the specified PWM channel.
     ///
@@ -349,6 +386,7 @@ impl PWMManager {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
         }
     }
+
 
     #[pyo3(signature = (channel_num, pulse_width_ms))]
     fn set_pulse_width(&self, channel_num: u8, pulse_width_ms: f64) -> PyResult<()> {
@@ -397,6 +435,7 @@ impl PWMManager {
         }
     }
 
+
     #[pyo3(signature = (channel_num))]
     fn get_period(&self, channel_num: u8) -> PyResult<f64> {
         let pwm_channels = self.pwm_channels.lock().unwrap();
@@ -429,6 +468,7 @@ impl PWMManager {
             Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("PWM channel not initialized"))
         }
     }
+
 
     /// Gets the current duty cycle of the specified PWM channel.
     ///

@@ -33,7 +33,7 @@ Methods
 
    **Parameters**:
 
-   - `channel_num` (int): The PWM channel number (0 or 1).
+   - `channel_num` (int): The PWM channel number (0-3 depending on your pi model).
 
    - `frequency_hz` (Optional[float]): Frequency in Hertz. **Default**: 1000.
 

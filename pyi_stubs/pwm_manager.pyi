@@ -16,7 +16,7 @@ class PWMManager:
         If neither frequency_hz and duty_cycle nor period_ms and pulse_width_ms are set, the default value of 1000 hz
         and a duty_cycle of 0 are used.
 
-        :param channel_num: The PWM channel number (0 or 1).
+        :param channel_num: The PWM channel number (0-3 depending on your pi model).
         :param frequency_hz: The frequency in Hertz.
         :param duty_cycle: The duty cycle (0 to 100).
         :param period_ms: The period in milliseconds.
