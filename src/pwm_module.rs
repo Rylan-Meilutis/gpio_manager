@@ -170,7 +170,7 @@ impl PWMManager {
 
         let (frequency, duty_cycle_percent) = compute_pwm_values(&frequency_hz, &duty_cycle, &period_ms, &pulse_width_ms);
 
-        if pulse_width_ms.is_some() & &pulse_width_ms.unwrap() / 1000f64 > 1f64 / frequency {
+        if pulse_width_ms.is_some() && pulse_width_ms.unwrap() / 1000f64 > 1f64 / frequency {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pulse width must be less than period (pwm not setup"));
         }
 
