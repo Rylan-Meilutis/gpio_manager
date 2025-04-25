@@ -39,7 +39,7 @@ uv pip install --upgrade gpio-manager
 
 ## Support
 
-- If you have any issues with the library please reach out in the discussions tab, or open an issue if you find a bug.
+- If you have any issues with the library, please reach out in the discussions tab, or open an issue if you find a bug.
 
 ## Coming Soon
 
