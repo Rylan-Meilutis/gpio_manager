@@ -12,7 +12,11 @@ use std::time::Duration;
 
 fn set_gpio_to_pwm_pi5(pin: usize) -> std::io::Result<()> {
     // Set GPIO18 to alternate function `a3` with pull-down
-    hw_pwm_setup(pin, "a3")
+    match pin {
+        12 => hw_pwm_setup(pin, "a0"),
+        13 => hw_pwm_setup(pin, "a0"),
+        _ => hw_pwm_setup(pin, "a3"),
+    }
 }
 
 
