@@ -16,7 +16,7 @@ uv pip install --upgrade gpio-manager
 
 ## Description
 
-- These are rust bindings around
+- These are rust bindings around a modified version of
   the [RPPAL - Raspberry Pi Peripheral Access Library](https://github.com/golemparts/rppal) crate that gives access to
   gpio, pwm, spi, and more.
   As of current, the gpio, i2c, and pwm portions are tested and working.
