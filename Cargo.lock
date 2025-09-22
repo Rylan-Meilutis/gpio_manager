@@ -147,8 +147,7 @@ dependencies = [
 [[package]]
 name = "rppal"
 version = "0.22.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1ce3b019009cff02cb6b0e96e7cc2e5c5b90187dc1a490f8ef1521d0596b026"
+source = "git+https://gitlab.rylanswebsite.com/rylan-meilutis/rppal.git?branch=main#978def55e6cbb72308f44e4017afc1250b8d540d"
 dependencies = [
  "libc",
 ]
