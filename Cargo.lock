@@ -146,10 +146,11 @@ dependencies = [
 
 [[package]]
 name = "rppal"
-version = "0.22.1"
-source = "git+https://gitlab.rylanswebsite.com/rylan-meilutis/rppal.git?branch=main#978def55e6cbb72308f44e4017afc1250b8d540d"
+version = "0.22.2"
+source = "git+https://gitlab.rylanswebsite.com/rylan-meilutis/rppal.git?branch=main#2fae367acaaf524c8356b67f4f167cbe00830ec8"
 dependencies = [
  "libc",
+ "version-compare",
 ]
 
 [[package]]
@@ -180,3 +181,9 @@ name = "unindent"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7de7d73e1754487cb58364ee906a499937a0dfabd86bcb980fa99ec8c8fa2ce"
+
+[[package]]
+name = "version-compare"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "579a42fc0b8e0c63b76519a339be31bed574929511fa53c1a3acae26eb258f29"
