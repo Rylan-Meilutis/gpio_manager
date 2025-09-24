@@ -136,7 +136,7 @@ impl PWMManager {
         let manager = gpio_manager.get_manager();
         let manager = manager.lock().unwrap();
 
-        let pin_num = match DeviceInfo::new().unwrap().model() {
+        let pin_num: usize = match DeviceInfo::new().unwrap().model() {
             Model::RaspberryPi5 =>
                 match channel_num {
                     0 => 12,
@@ -152,9 +152,9 @@ impl PWMManager {
                     _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
                 },
         };
-        if gpio_manager.is_input_pin(pin_num, &manager) {
+        if gpio_manager.is_input_pin(pin_num as u8, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin is already in use as an input pin"));
-        } else if gpio_manager.is_output_pin(pin_num, &manager) {
+        } else if gpio_manager.is_output_pin(pin_num as u8, &manager) {
             return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Pin is already in use as an output pin"));
         }
         drop(manager);
@@ -195,36 +195,12 @@ impl PWMManager {
         };
 
         match DeviceInfo::new().unwrap().model() {
-            Model::RaspberryPi5 => match channel_num {
-                0 => match set_gpio_to_pwm_pi5(12) {
-                    Ok(_) => {}
-                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
-                },
-                1 => match set_gpio_to_pwm_pi5(13) {
-                    Ok(_) => {}
-                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
-                },
-                2 => match set_gpio_to_pwm_pi5(18) {
-                    Ok(_) => {}
-                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
-                },
-                3 => match set_gpio_to_pwm_pi5(19) {
-                    Ok(_) => {}
-                    Err(_) => { println!("an error occurred, pin state is unknown, make sure you user is in the gpio group") }
-                },
-                _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
-            },
-            _ => match channel_num {
-                0 => match set_gpio_to_pwm_other(18) {
-                    Ok(_) => {}
-                    Err(_) => {}
-                },
-                1 => match set_gpio_to_pwm_other(19) {
-                    Ok(_) => {}
-                    Err(_) => {}
-                },
-                _ => return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>("Invalid PWM channel number")),
-            },
+            Model::RaspberryPi5 => {
+                set_gpio_to_pwm_pi5(pin_num).expect("an error occurred, pin state is unknown, make sure you user is in the gpio group");
+            }
+            _ => {
+                set_gpio_to_pwm_other(pin_num).expect("an error occurred, pin state is unknown");
+            }
         }
 
         let mut pwm = Pwm::with_frequency(channel, frequency, duty_cycle_percent / 100f64, polarity, false)
