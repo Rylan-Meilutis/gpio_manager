@@ -11,7 +11,7 @@ import os
 sys.path.insert(0, os.path.abspath('..'))  # Add the project root to the path
 
 project = 'gpio-manager'
-copyright = '2024, Rylan Meilutis'
+copyright = '2025, Rylan Meilutis'
 author = 'Rylan Meilutis'
 release = '3.2.2'
 
